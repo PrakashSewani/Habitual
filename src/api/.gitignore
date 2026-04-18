@@ -1,0 +1,53 @@
+# =========================
+
+# .NET Build
+
+# =========================
+
+bin/
+obj/
+out/
+
+# User-specific
+
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDEs
+
+.vs/
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+
+*.log
+
+# ASP.NET
+
+wwwroot/
+appsettings.Development.json
+
+# EF Core
+
+# Comment this if you want to version migrations
+
+Migrations/
+
+# Test results
+
+TestResults/
+coverage/
+*.coverage
+
+# Rider
+
+.idea/
+
+# OS
+
+.DS_Store
+Thumbs.db
