@@ -35,7 +35,7 @@ appsettings.Development.json
 
 # Comment this if you want to version migrations
 
-Migrations/
+# Migrations/
 
 # Test results
 
