@@ -13,7 +13,6 @@
         public Guid HabitId { get; set; }
         public Habit Habit { get; set; }
         public ScheduleType Type { get; set; }
-        public List<DayOfWeek> Days { get; set; } = [];
         public int? Interval { get; set; }
     }
 }
