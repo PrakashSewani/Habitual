@@ -13,6 +13,9 @@ namespace Infrastructure.Configurations
             builder.Property(x => x.Email)
                    .IsRequired();
 
+            builder.Property(x => x.PasswordHash)
+                   .IsRequired();
+
             builder.Property(x => x.Name)
                    .IsRequired()
                    .HasMaxLength(100);

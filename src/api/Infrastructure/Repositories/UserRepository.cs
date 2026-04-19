@@ -9,7 +9,7 @@ namespace Infrastructure.Repository
     {
         private readonly AppDbContext _context = context;
 
-        public User AddUserAsync(User user)
+        public async Task<User> AddUserAsync(User user)
         {
             _context.Users.Add(user);
             _context.SaveChanges();
