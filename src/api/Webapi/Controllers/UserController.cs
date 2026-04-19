@@ -1,4 +1,5 @@
 ﻿using Application.Features.Users.Command.Create;
+using Application.Features.Users.Command.Delete;
 using Application.Models.Users.Create;
 using Domain;
 using MediatR;
@@ -43,9 +44,10 @@ namespace Webapi.Controllers
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteUser()
+        public async Task<IActionResult> DeleteUser(Guid Id)
         {
-            throw new NotImplementedException();
+            var resp = await _mediator.Send(new DeleteUserRequest(Id));
+            return Ok(resp);
         }
     }
 }

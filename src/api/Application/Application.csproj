@@ -12,7 +12,6 @@
   <ItemGroup>
     <Folder Include="Features\Habits\" />
     <Folder Include="Features\Users\Command\Auth\" />
-    <Folder Include="Features\Users\Command\Delete\" />
     <Folder Include="Features\Users\Command\Update\" />
     <Folder Include="Features\Users\Query\Get\" />
   </ItemGroup>
