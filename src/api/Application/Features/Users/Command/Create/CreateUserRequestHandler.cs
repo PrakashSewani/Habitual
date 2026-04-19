@@ -15,6 +15,10 @@ namespace Application.Features.Users.Command.Create
         {
             try
             {
+                var userInDb = await _userRepository.GetUserByEmailIdAsync(request.UserRequest.Email);
+
+                if (userInDb != null) throw new Exception("User already exists, please try Log In");
+
                 var resp = _mapper.Map<CreateUserDTO>(await _userRepository.AddUserAsync(new User
                 {
                     Name = request.UserRequest.Name,

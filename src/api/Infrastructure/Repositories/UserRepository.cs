@@ -11,38 +11,49 @@ namespace Infrastructure.Repository
 
         public async Task<User> AddUserAsync(User user)
         {
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
             return user;
         }
 
-        public bool DeleteUserAsync(Guid userId)
+        public async Task<bool> DeleteUserAsync(Guid userId)
         {
-            _context.Users.Remove(new User { Id = userId });
-            _context.SaveChanges();
+            var user = await _context.Users
+                                     .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return false;
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
             return true;
         }
 
-        public Task<User> GetUserByEmailIdAsync(string emailId)
+        public async Task<User> GetUserByEmailIdAsync(string emailId)
         {
-            return _context.Users.FirstOrDefaultAsync(u => u.Email == emailId);
+            return await _context.Users
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(u => u.Email == emailId);
         }
 
-        public Task<User> GetUserByIdAsync(Guid userId)
+        public async Task<User> GetUserByIdAsync(Guid userId)
         {
-            return _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            return await _context.Users
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(u => u.Id == userId);
         }
 
         public async Task<User> UpdateUserAsync(User user)
         {
-            User userToUpdate = await GetUserByIdAsync(user.Id);
-            
+            var userToUpdate = await GetUserByIdAsync(user.Id);
+
             userToUpdate.Email = user.Email;
             userToUpdate.Name = user.Name;
             userToUpdate.PhoneNumber = user.PhoneNumber;
 
-            _context.Users.Update(userToUpdate);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return userToUpdate;
         }

@@ -8,6 +8,6 @@ namespace Application.Repository
         Task<User> GetUserByIdAsync(Guid userId);
         Task<User> GetUserByEmailIdAsync(string emailId);
         Task<User> UpdateUserAsync(User user);
-        bool DeleteUserAsync(Guid userId);
+        Task<bool> DeleteUserAsync(Guid userId);
     }
 }

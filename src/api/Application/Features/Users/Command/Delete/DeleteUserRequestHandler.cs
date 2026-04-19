@@ -7,12 +7,16 @@ namespace Application.Features.Users.Command.Delete
     {
         private readonly IUserRepository _userRepository = userRepository;
 
-        Task<bool> IRequestHandler<DeleteUserRequest, bool>.Handle(DeleteUserRequest request, CancellationToken cancellationToken)
+        async Task<bool> IRequestHandler<DeleteUserRequest, bool>.Handle(DeleteUserRequest request, CancellationToken cancellationToken)
         {
             try
             {
-                _userRepository.DeleteUserAsync(request.Id);
-                return Task.FromResult(true);
+                var isDeleted = await _userRepository.DeleteUserAsync(request.Id);
+
+                if (!isDeleted)
+                    throw new Exception("User not found");
+
+                return true;
             }
             catch (Exception)
             {
