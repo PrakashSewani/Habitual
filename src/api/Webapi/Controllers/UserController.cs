@@ -1,4 +1,5 @@
-﻿using Application.Features.Users.Command.Create;
+﻿using Application.Features.Users.Command.Auth;
+using Application.Features.Users.Command.Create;
 using Application.Features.Users.Command.Delete;
 using Application.Features.Users.Command.Update;
 using Application.Models.Users.Create;
@@ -34,9 +35,10 @@ namespace Webapi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> LoginUser()
+        public async Task<IActionResult> LoginUser(string username, string password)
         {
-            throw new NotImplementedException();
+            var resp = await _mediator.Send(new AuthUserRequest(username, password));
+            return Ok(resp);
         }
 
         [HttpPut("update")]
