@@ -56,6 +56,7 @@ namespace Infrastructure.Repository
             userToUpdate.Email = user.Email;
             userToUpdate.Name = user.Name;
             userToUpdate.PhoneNumber = user.PhoneNumber;
+            userToUpdate.PasswordHash = user.PasswordHash;
 
             await _context.SaveChangesAsync();
 

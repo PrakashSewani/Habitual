@@ -1,6 +1,8 @@
-﻿using Application.Repository;
+﻿using Application.Interfaces;
+using Application.Repository;
 using Infrastructure.Context;
 using Infrastructure.Repository;
+using Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,8 +15,9 @@ namespace Infrastructure
         {
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")))
-                .AddScoped<IUserRepository,UserRepository>();
-            
+                .AddScoped<IUserRepository, UserRepository>()
+                .AddScoped<IPasswordHasher, PasswordHasher>();
+
             return services;
         }
     }
