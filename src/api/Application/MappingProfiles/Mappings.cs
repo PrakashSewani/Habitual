@@ -1,4 +1,5 @@
 ﻿using Application.Models.Users.Create;
+using Application.Models.Users.Update;
 using AutoMapper;
 using Domain;
 
@@ -9,6 +10,8 @@ namespace Application.MappingProfiles
         public Mappings()
         {
             CreateMap<User, CreateUserDTO>();
+            CreateMap<User, UpdateUserDTO>();
+            CreateMap<UpdateUser, User>();
         }
     }
 }

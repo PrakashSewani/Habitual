@@ -1,6 +1,8 @@
 ﻿using Application.Features.Users.Command.Create;
 using Application.Features.Users.Command.Delete;
+using Application.Features.Users.Command.Update;
 using Application.Models.Users.Create;
+using Application.Models.Users.Update;
 using Domain;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -38,9 +40,10 @@ namespace Webapi.Controllers
         }
 
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateUser()
+        public async Task<IActionResult> UpdateUser(UpdateUser user)
         {
-            throw new NotImplementedException();
+            var resp = await _mediator.Send(new UpdateUserRequest(user));
+            return Ok(resp);
         }
 
         [HttpDelete("delete")]

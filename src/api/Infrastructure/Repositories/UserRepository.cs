@@ -47,7 +47,11 @@ namespace Infrastructure.Repository
 
         public async Task<User> UpdateUserAsync(User user)
         {
-            var userToUpdate = await GetUserByIdAsync(user.Id);
+            var userToUpdate = await _context.Users
+                                             .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            if (userToUpdate == null)
+                throw new Exception("User doesnt exist");
 
             userToUpdate.Email = user.Email;
             userToUpdate.Name = user.Name;
