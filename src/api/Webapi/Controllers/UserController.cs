@@ -1,6 +1,8 @@
 ﻿using Application.Features.Users.Command.Auth;
 using Application.Features.Users.Command.Create;
 using Application.Features.Users.Command.Delete;
+using Application.Features.Users.Command.Logout;
+using Application.Features.Users.Command.Refresh;
 using Application.Features.Users.Command.Update;
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
@@ -28,16 +30,17 @@ namespace Webapi.Controllers
             return Ok(resp);
         }
 
-        [HttpGet("get")]
-        public async Task<IActionResult> GetUser()
-        {
-            throw new NotImplementedException();
-        }
-
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser(string username, string password)
         {
             var resp = await _mediator.Send(new AuthUserRequest(username, password));
+            return Ok(resp);
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> RefreshToken(string refreshToken)
+        {
+            var resp = await _mediator.Send(new RefreshUserRequest(refreshToken));
             return Ok(resp);
         }
 
@@ -52,6 +55,13 @@ namespace Webapi.Controllers
         public async Task<IActionResult> DeleteUser(Guid Id)
         {
             var resp = await _mediator.Send(new DeleteUserRequest(Id));
+            return Ok(resp);
+        }
+
+        [HttpDelete("logout")]
+        public async Task<IActionResult> LogoutUser(string refreshToken)
+        {
+            var resp = await _mediator.Send(new LogoutUserRequest(refreshToken));
             return Ok(resp);
         }
     }
