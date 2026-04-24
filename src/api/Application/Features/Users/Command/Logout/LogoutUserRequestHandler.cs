@@ -11,10 +11,7 @@ namespace Application.Features.Users.Command.Logout
         {
             var userId = await _refreshTokenStore.GetUserIdAsync(request.RefreshToken);
 
-            if (userId == Guid.Empty)
-            {
-                return false;
-            }
+            if (userId == Guid.Empty) return false;
 
             await _refreshTokenStore.DeleteAsync(request.RefreshToken);
 

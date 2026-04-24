@@ -19,7 +19,7 @@ namespace Application.Features.Users.Command.Refresh
 
             if (userId == Guid.Empty)
             {
-                throw new UnauthorizedAccessException("Invalid refresh token.");
+                throw new UnauthorizedAccessException("Invalid refresh token");
             }
 
             var user = await _userRepository.GetUserByIdAsync(userId) ?? throw new Exception("User not found");

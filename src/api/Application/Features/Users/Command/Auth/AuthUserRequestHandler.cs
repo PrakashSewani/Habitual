@@ -17,38 +17,31 @@ namespace Application.Features.Users.Command.Auth
 
         async Task<AuthResponse> IRequestHandler<AuthUserRequest, AuthResponse>.Handle(AuthUserRequest request, CancellationToken cancellationToken)
         {
-            try
+            var email = request.Email.Trim().ToLower();
+            var userInDb = await _userRepository.GetUserByEmailIdAsync(email) ?? throw new Exception("User not found");
+
+            var isPasswordValid = _passwordHasher.VerifyPassword(
+                request.Password,
+                userInDb.PasswordHash
+            );
+
+            if (!isPasswordValid) throw new Exception("Username/Password is incorrect");
+
+            var accessToken = _tokenService.GenerateAccessToken(userInDb.Id, userInDb.Email);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            await _refreshTokenStore.StoreAsync(
+                refreshToken,
+                userInDb.Id,
+                TimeSpan.FromDays(7)
+            );
+
+            return new AuthResponse
             {
-                var email = request.Email.Trim().ToLower();
-                var userInDb = await _userRepository.GetUserByEmailIdAsync(email) ?? throw new Exception("User not found");
-
-                var isPasswordValid = _passwordHasher.VerifyPassword(
-                    request.Password,
-                    userInDb.PasswordHash
-                );
-
-                if (!isPasswordValid) throw new Exception("Username/Password is incorrect");
-
-                var accessToken = _tokenService.GenerateAccessToken(userInDb.Id, userInDb.Email);
-                var refreshToken = _tokenService.GenerateRefreshToken();
-
-                await _refreshTokenStore.StoreAsync(
-                    refreshToken,
-                    userInDb.Id,
-                    TimeSpan.FromDays(7)
-                );
-
-                return new AuthResponse
-                {
-                    Token = accessToken,
-                    RefreshToken = refreshToken,
-                    UserInfo = _mapper.Map<AuthUserDTO>(userInDb)
-                };
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+                Token = accessToken,
+                RefreshToken = refreshToken,
+                UserInfo = _mapper.Map<AuthUserDTO>(userInDb)
+            };
         }
     }
 }

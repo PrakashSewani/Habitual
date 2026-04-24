@@ -15,17 +15,10 @@ namespace Application.Features.Users.Command.Update
 
         async Task<UpdateUserDTO> IRequestHandler<UpdateUserRequest, UpdateUserDTO>.Handle(UpdateUserRequest request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var userMapped = _mapper.Map<User>(request.UserRequest);
-                userMapped.PasswordHash = _passwordHasher.HashPassword(request.UserRequest.Password);
-                var resp = _mapper.Map<UpdateUserDTO>(await _userRepository.UpdateUserAsync(userMapped));
-                return resp;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var userMapped = _mapper.Map<User>(request.UserRequest);
+            userMapped.PasswordHash = _passwordHasher.HashPassword(request.UserRequest.Password);
+            var resp = _mapper.Map<UpdateUserDTO>(await _userRepository.UpdateUserAsync(userMapped));
+            return resp;
         }
     }
 }

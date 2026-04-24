@@ -1,5 +1,7 @@
 using Application;
 using Infrastructure;
+using Microsoft.AspNetCore.Diagnostics;
+using WebApi.Common.Responses;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,5 +35,28 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exception = context.Features
+            .Get<IExceptionHandlerFeature>()?.Error;
+
+        context.Response.ContentType = "application/json";
+
+        context.Response.StatusCode = exception switch
+        {
+            UnauthorizedAccessException => 401,
+            _ => 500
+        };
+
+        var response = ApiResponseFactory.Failure<object>(
+            exception?.Message ?? "An error occurred"
+        );
+
+        await context.Response.WriteAsJsonAsync(response);
+    });
+});
 
 app.Run();
