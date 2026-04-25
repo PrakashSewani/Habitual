@@ -7,37 +7,30 @@ using MediatR;
 
 namespace Application.Features.Users.Command.Create
 {
-    public class CreateUserRequestHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IMapper mapper) : IRequestHandler<CreateUserRequest, CreateUserDTO>
+    public class CreateUserRequestHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IMapper mapper) : IRequestHandler<CreateUserRequest, CreateUserResponse>
     {
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly IMapper _mapper = mapper;
 
-        async Task<CreateUserDTO> IRequestHandler<CreateUserRequest, CreateUserDTO>.Handle(CreateUserRequest request, CancellationToken cancellationToken)
+        async Task<CreateUserResponse> IRequestHandler<CreateUserRequest, CreateUserResponse>.Handle(CreateUserRequest request, CancellationToken cancellationToken)
         {
-            try
+            var userInDb = await _userRepository.GetUserByEmailIdAsync(request.UserRequest.Email);
+
+            if (userInDb != null) throw new Exception("User already exists, redirecting to login");
+
+            var hashedPassword = _passwordHasher.HashPassword(request.UserRequest.Password);
+
+            var resp = _mapper.Map<CreateUserResponse>(await _userRepository.AddUserAsync(new User
             {
-                var userInDb = await _userRepository.GetUserByEmailIdAsync(request.UserRequest.Email);
+                Name = request.UserRequest.Name,
+                Email = request.UserRequest.Email,
+                PasswordHash = hashedPassword,
+                PhoneNumber = request.UserRequest.PhoneNumber,
+                CreatedAt = DateTime.UtcNow
+            }));
 
-                if (userInDb != null) throw new Exception("User already exists, please try Log In");
-
-                var hashedPassword = _passwordHasher.HashPassword(request.UserRequest.Password);
-
-                var resp = _mapper.Map<CreateUserDTO>(await _userRepository.AddUserAsync(new User
-                {
-                    Name = request.UserRequest.Name,
-                    Email = request.UserRequest.Email,
-                    PasswordHash = hashedPassword,
-                    PhoneNumber = request.UserRequest.PhoneNumber,
-                    CreatedAt = DateTime.UtcNow
-                }));
-
-                return resp;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return resp;
         }
     }
 }

@@ -1,11 +1,14 @@
-﻿using Application.Interfaces;
+﻿using Application.Abstractions.Authentication;
+using Application.Interfaces;
 using Application.Repository;
+using Infrastructure.Authentication;
 using Infrastructure.Context;
 using Infrastructure.Repository;
 using Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Infrastructure
 {
@@ -13,10 +16,24 @@ namespace Infrastructure
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<AppDbContext>(options =>
+            services
+                .AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")))
                 .AddScoped<IUserRepository, UserRepository>()
-                .AddScoped<IPasswordHasher, PasswordHasher>();
+                .AddScoped<IPasswordHasher, PasswordHasher>()
+                .AddSingleton<IConnectionMultiplexer>(sp =>
+                {
+                    var configuration = sp.GetRequiredService<IConfiguration>();
+                    var connectionString = configuration["Redis:Connection"];
+
+                    return ConnectionMultiplexer.Connect(connectionString);
+                })
+                .AddScoped<IRefreshTokenStore, RedisRefreshTokenStore>()
+                .AddScoped<ITokenService>(sp =>
+                {
+                    var config = sp.GetRequiredService<IConfiguration>();
+                    return new TokenService(config["Jwt:Secret"]);
+                });
 
             return services;
         }

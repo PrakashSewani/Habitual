@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Application.Pipeline_Behaviour;
+using FluentValidation;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace Application
@@ -9,8 +12,10 @@ namespace Application
         {
             services
                 .AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly())
-                .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-            
+                .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()))
+                .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly())
+                .AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidatorPipelineBehaviour<,>));
+
             return services;
         }
     }

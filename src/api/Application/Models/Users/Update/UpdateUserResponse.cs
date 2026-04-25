@@ -1,6 +1,6 @@
 ﻿namespace Application.Models.Users.Update
 {
-    public class UpdateUserDTO
+    public class UpdateUserResponse
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
