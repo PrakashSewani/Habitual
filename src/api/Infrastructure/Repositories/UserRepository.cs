@@ -58,7 +58,7 @@ namespace Infrastructure.Repository
             if (existingUser != null && existingUser.Id != user.Id)
                 throw new Exception("Email already exists");
 
-            userToUpdate.Email = user.Email;
+            userToUpdate.Email = user.Email.Trim().ToLower();
             userToUpdate.Name = user.Name;
             userToUpdate.PhoneNumber = user.PhoneNumber;
             userToUpdate.PasswordHash = user.PasswordHash;

@@ -24,7 +24,7 @@ namespace Application.Features.Users.Command.Create
             var resp = _mapper.Map<CreateUserResponse>(await _userRepository.AddUserAsync(new User
             {
                 Name = request.UserRequest.Name,
-                Email = request.UserRequest.Email,
+                Email = request.UserRequest.Email.Trim().ToLower(),
                 PasswordHash = hashedPassword,
                 PhoneNumber = request.UserRequest.PhoneNumber,
                 CreatedAt = DateTime.UtcNow
