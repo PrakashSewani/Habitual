@@ -7,22 +7,20 @@ using Application.Features.Users.Command.Update;
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Common.Responses;
 
 namespace Webapi.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class UserController(IMediator mediator) : Controller
     {
         private readonly IMediator _mediator = mediator;
 
-        public IActionResult Index()
-        {
-            return View();
-        }
-
+        [AllowAnonymous]
         [HttpPost("create")]
         public async Task<IActionResult> CreateUser(CreateUser User)
         {
@@ -30,6 +28,7 @@ namespace Webapi.Controllers
             return Ok(ApiResponseFactory.Success(resp, "User created successfully"));
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser(string username, string password)
         {
@@ -37,6 +36,7 @@ namespace Webapi.Controllers
             return Ok(ApiResponseFactory.Success(resp, "User logged in successfully"));
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken(string refreshToken)
         {

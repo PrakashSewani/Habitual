@@ -1,40 +1,44 @@
 using Application;
 using Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
 using WebApi.Common.Responses;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
-builder.Services.AddSwaggerGen();
-
 builder.Services.AddApplicationServices();
-
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+builder.Services.AddAuthentication(options =>
 {
-    app.MapOpenApi();
-
-    app.UseSwaggerUI(options =>
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.SwaggerEndpoint("/openapi/v1.json","My API V1");
-    });
-}
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
 
-app.UseHttpsRedirection();
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Secret"]
+                ?? throw new InvalidOperationException("JWT Secret Key is not configured")
+            ))
+    };
+});
 
-app.UseAuthorization();
-
-app.MapControllers();
+var app = builder.Build();
 
 app.UseExceptionHandler(errorApp =>
 {
@@ -58,5 +62,18 @@ app.UseExceptionHandler(errorApp =>
         await context.Response.WriteAsJsonAsync(response);
     });
 });
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
