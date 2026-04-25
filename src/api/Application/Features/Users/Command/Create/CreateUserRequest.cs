@@ -1,10 +1,11 @@
 ﻿using Application.Models.Users.Create;
+using Application.Pipeline_Behaviour.Contract;
 using Domain;
 using MediatR;
 
 namespace Application.Features.Users.Command.Create
 {
-    public class CreateUserRequest(CreateUser userRequest) : IRequest<CreateUserDTO>
+    public class CreateUserRequest(CreateUser userRequest) : IRequest<CreateUserResponse>, IValidate
     {
         public CreateUser UserRequest { get; set; } = userRequest;
     }

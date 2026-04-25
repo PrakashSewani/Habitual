@@ -7,13 +7,13 @@ using MediatR;
 
 namespace Application.Features.Users.Command.Create
 {
-    public class CreateUserRequestHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IMapper mapper) : IRequestHandler<CreateUserRequest, CreateUserDTO>
+    public class CreateUserRequestHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IMapper mapper) : IRequestHandler<CreateUserRequest, CreateUserResponse>
     {
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly IMapper _mapper = mapper;
 
-        async Task<CreateUserDTO> IRequestHandler<CreateUserRequest, CreateUserDTO>.Handle(CreateUserRequest request, CancellationToken cancellationToken)
+        async Task<CreateUserResponse> IRequestHandler<CreateUserRequest, CreateUserResponse>.Handle(CreateUserRequest request, CancellationToken cancellationToken)
         {
             var userInDb = await _userRepository.GetUserByEmailIdAsync(request.UserRequest.Email);
 
@@ -21,7 +21,7 @@ namespace Application.Features.Users.Command.Create
 
             var hashedPassword = _passwordHasher.HashPassword(request.UserRequest.Password);
 
-            var resp = _mapper.Map<CreateUserDTO>(await _userRepository.AddUserAsync(new User
+            var resp = _mapper.Map<CreateUserResponse>(await _userRepository.AddUserAsync(new User
             {
                 Name = request.UserRequest.Name,
                 Email = request.UserRequest.Email,

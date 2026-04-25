@@ -1,6 +1,6 @@
 ﻿namespace Application.Models.Users.Create
 {
-    public class CreateUserDTO
+    public class CreateUserResponse
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

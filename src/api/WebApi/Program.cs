@@ -1,4 +1,5 @@
 using Application;
+using FluentValidation;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
@@ -49,14 +50,29 @@ app.UseExceptionHandler(errorApp =>
 
         context.Response.ContentType = "application/json";
 
-        context.Response.StatusCode = exception switch
+        var errors = new List<string>();
+
+        switch (exception)
         {
-            UnauthorizedAccessException => 401,
-            _ => 500
-        };
+            case ValidationException validationException:
+                context.Response.StatusCode = 400;
+                errors = [.. validationException.Errors.Select(e => e.ErrorMessage)];
+                break;
+
+            case UnauthorizedAccessException:
+                context.Response.StatusCode = 401;
+                errors.Add(exception.Message);
+                break;
+
+            default:
+                context.Response.StatusCode = 500;
+                errors.Add(exception?.Message ?? "Unknown error");
+                break;
+        }
 
         var response = ApiResponseFactory.Failure<object>(
-            exception?.Message ?? "An error occurred"
+            "An error occured",
+            errors
         );
 
         await context.Response.WriteAsJsonAsync(response);

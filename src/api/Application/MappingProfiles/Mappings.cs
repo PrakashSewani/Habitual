@@ -10,8 +10,8 @@ namespace Application.MappingProfiles
     {
         public Mappings()
         {
-            CreateMap<User, CreateUserDTO>();
-            CreateMap<User, UpdateUserDTO>();
+            CreateMap<User, CreateUserResponse>();
+            CreateMap<User, UpdateUserResponse>();
             CreateMap<UpdateUser, User>();
             CreateMap<User, AuthUserDTO>();
         }
