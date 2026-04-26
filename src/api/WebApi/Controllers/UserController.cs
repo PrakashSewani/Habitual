@@ -9,6 +9,7 @@ using Application.Models.Users.Update;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WebApi.Common.Responses;
 
 namespace Webapi.Controllers
@@ -30,9 +31,9 @@ namespace Webapi.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> LoginUser(string username, string password)
+        public async Task<IActionResult> LoginUser(string email, string password)
         {
-            var resp = await _mediator.Send(new AuthUserRequest(username, password));
+            var resp = await _mediator.Send(new AuthUserRequest(email, password));
             return Ok(ApiResponseFactory.Success(resp, "User logged in successfully"));
         }
 
@@ -52,9 +53,12 @@ namespace Webapi.Controllers
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteUser(Guid Id)
+        public async Task<IActionResult> DeleteUser()
         {
-            var resp = await _mediator.Send(new DeleteUserRequest(Id));
+            var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
+            var userId = Guid.Parse(userIdClaim.Value);
+            var resp = await _mediator.Send(new DeleteUserRequest(userId));
             return Ok(ApiResponseFactory.Success(resp, "User deleted successfully"));
         }
 

@@ -15,7 +15,7 @@ namespace Application.Features.Users.Command.Create
 
         async Task<CreateUserResponse> IRequestHandler<CreateUserRequest, CreateUserResponse>.Handle(CreateUserRequest request, CancellationToken cancellationToken)
         {
-            var userInDb = await _userRepository.GetUserByEmailIdAsync(request.UserRequest.Email);
+            var userInDb = await _userRepository.GetUserByEmailIdAsync(request.UserRequest.Email.Trim().ToLower());
 
             if (userInDb != null) throw new Exception("User already exists, redirecting to login");
 
