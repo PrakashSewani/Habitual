@@ -9,6 +9,6 @@
         public string PhoneNumber{ get; set; }
 
         public List<Habit> Habits { get; set; } = [];
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 }
