@@ -11,6 +11,6 @@
 
         public List<HabitLog> HabitStats { get; set; } = [];
         public HabitSchedule Schedule { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
