@@ -1,6 +1,6 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Models.Users.Auth;
-using Application.Repository;
+using Application.Repositories.Users;
 using AutoMapper;
 using MediatR;
 

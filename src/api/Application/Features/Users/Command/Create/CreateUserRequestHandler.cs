@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Models.Users.Create;
-using Application.Repository;
+using Application.Repositories.Users;
 using AutoMapper;
 using Domain;
 using MediatR;

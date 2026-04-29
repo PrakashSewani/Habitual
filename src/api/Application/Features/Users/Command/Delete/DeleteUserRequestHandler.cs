@@ -1,4 +1,4 @@
-﻿using Application.Repository;
+﻿using Application.Repositories.Users;
 using MediatR;
 
 namespace Application.Features.Users.Command.Delete

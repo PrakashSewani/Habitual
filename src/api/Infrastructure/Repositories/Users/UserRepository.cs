@@ -1,9 +1,9 @@
-﻿using Application.Repository;
+﻿using Application.Repositories.Users;
 using Domain;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repository
+namespace Infrastructure.Repositories.Users
 {
     public class UserRepository(AppDbContext context) : IUserRepository
     {

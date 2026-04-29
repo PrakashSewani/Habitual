@@ -1,9 +1,9 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Interfaces;
-using Application.Repository;
+using Application.Repositories.Users;
 using Infrastructure.Authentication;
 using Infrastructure.Context;
-using Infrastructure.Repository;
+using Infrastructure.Repositories.Users;
 using Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

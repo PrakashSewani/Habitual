@@ -9,7 +9,7 @@
         public string Description { get; set; }
         public bool IsActive { get; set; } = true;
 
-        public List<HabitLog> HabitStats { get; set; } = [];
+        public List<HabitLog> HabitLog { get; set; } = [];
         public HabitSchedule Schedule { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }

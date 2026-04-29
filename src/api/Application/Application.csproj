@@ -10,7 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Habits\" />
+    <Folder Include="Features\Habits\Command\" />
+    <Folder Include="Features\Habits\Query\" />
+    <Folder Include="Models\Habits\" />
   </ItemGroup>
 
   <ItemGroup>
