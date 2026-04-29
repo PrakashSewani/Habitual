@@ -1,6 +1,6 @@
-﻿namespace Domain
+﻿namespace Domain.Entities.Habits
 {
-    public class HabitLog
+    public class HabitLogArchive
     {
         public Guid Id { get; set; }
         public Guid HabitId { get; set; }

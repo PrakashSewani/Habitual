@@ -1,4 +1,6 @@
-﻿namespace Domain
+﻿using Domain.Entities.Habits;
+
+namespace Domain.Entities.Users
 {
     public class User
     {

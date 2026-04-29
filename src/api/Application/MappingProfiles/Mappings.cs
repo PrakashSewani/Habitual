@@ -2,7 +2,7 @@
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
 using AutoMapper;
-using Domain;
+using Domain.Entities.Users;
 
 namespace Application.MappingProfiles
 {

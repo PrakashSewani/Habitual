@@ -1,5 +1,4 @@
-﻿using Application.Models.Users.Update;
-using Domain;
+﻿using Domain.Entities.Users;
 
 namespace Application.Repositories.Users
 {

@@ -1,12 +1,7 @@
-﻿namespace Domain
+﻿using Domain.Common.Enums;
+
+namespace Domain.Entities.Habits
 {
-    public enum ScheduleType
-    {
-        Daily,
-        Weekly,
-        Interval
-    }
-    
     public class HabitSchedule
     {
         public Guid Id { get; set; }

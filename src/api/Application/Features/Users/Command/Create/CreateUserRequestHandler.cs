@@ -2,7 +2,7 @@
 using Application.Models.Users.Create;
 using Application.Repositories.Users;
 using AutoMapper;
-using Domain;
+using Domain.Entities.Users;
 using MediatR;
 
 namespace Application.Features.Users.Command.Create

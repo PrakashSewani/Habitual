@@ -1,5 +1,5 @@
 ﻿using Application.Repositories.Users;
-using Domain;
+using Domain.Entities.Users;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 

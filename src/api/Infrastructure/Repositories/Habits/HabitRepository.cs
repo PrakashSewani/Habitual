@@ -1,5 +1,5 @@
 ﻿using Application.Repositories.Habits;
-using Domain;
+using Domain.Entities.Habits;
 
 namespace Infrastructure.Repositories.Habits
 {

@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.Entities.Habits;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.Entities.Habits;
 
 namespace Application.Repositories.Habits
 {
@@ -8,7 +8,7 @@ namespace Application.Repositories.Habits
 
         Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId);
 
-        Task<Habit?> GetHabitByIdAsync(Guid habitId, Guid userId);
+        Task<Habit> GetHabitByIdAsync(Guid habitId, Guid userId);
 
         Task<Habit> UpdateHabitAsync(Habit habit);
 
