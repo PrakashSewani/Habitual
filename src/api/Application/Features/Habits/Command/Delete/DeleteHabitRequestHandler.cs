@@ -7,9 +7,10 @@ namespace Application.Features.Habits.Command.Delete
     {
         private readonly IHabitRepository _habitRepository = habitRepository;
 
-        Task<bool> IRequestHandler<DeleteHabitRequest, bool>.Handle(DeleteHabitRequest request, CancellationToken cancellationToken)
+        async Task<bool> IRequestHandler<DeleteHabitRequest, bool>.Handle(DeleteHabitRequest request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var resp = await _habitRepository.DeleteHabitAsync(request.HabitId, request.UserId);
+            return resp;
         }
     }
 }

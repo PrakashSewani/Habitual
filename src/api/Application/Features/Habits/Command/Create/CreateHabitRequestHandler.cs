@@ -1,6 +1,7 @@
 ﻿using Application.Models.Habits.Create;
 using Application.Repositories.Habits;
 using AutoMapper;
+using Domain.Entities.Habits;
 using MediatR;
 
 namespace Application.Features.Habits.Command.Create
@@ -10,9 +11,15 @@ namespace Application.Features.Habits.Command.Create
         private readonly IHabitRepository _habitRepository = habitRepository;
         private readonly IMapper _mapper = mapper;
 
-        Task<CreateHabitResponse> IRequestHandler<CreateHabitRequest, CreateHabitResponse>.Handle(CreateHabitRequest request, CancellationToken cancellationToken)
+        async Task<CreateHabitResponse> IRequestHandler<CreateHabitRequest, CreateHabitResponse>.Handle(CreateHabitRequest request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var habit = _mapper.Map<Habit>(request.CreateHabit);
+
+            habit.UserId = request.UserId;
+
+            var addHabit = await _habitRepository.AddHabitAsync(habit);
+
+            return _mapper.Map<CreateHabitResponse>(addHabit);
         }
     }
 }

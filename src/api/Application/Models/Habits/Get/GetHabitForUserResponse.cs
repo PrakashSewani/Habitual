@@ -1,6 +1,8 @@
-﻿namespace Application.Models.Habits.Create
+﻿using Application.Models.Habits.Create;
+
+namespace Application.Models.Habits.Get
 {
-    public class CreateHabitResponse
+    public class GetHabitForUserResponse
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

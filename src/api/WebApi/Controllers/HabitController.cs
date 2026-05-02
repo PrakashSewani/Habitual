@@ -1,6 +1,7 @@
 ﻿using Application.Features.Habits.Command.Create;
 using Application.Features.Habits.Command.Delete;
 using Application.Features.Habits.Command.Update;
+using Application.Features.Habits.Query.Get;
 using Application.Models.Habits.Create;
 using Application.Models.Habits.Update;
 using MediatR;
@@ -24,15 +25,20 @@ namespace WebApi.Controllers
             var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
             var userId = Guid.Parse(userIdClaim.Value);
-            habit.UserId = userId;
-            var resp = await _mediator.Send(new CreateHabitRequest(habit));
+
+            var resp = await _mediator.Send(new CreateHabitRequest(userId, habit));
             return Ok(ApiResponseFactory.Success(resp, "Habit created successfully"));
         }
 
         [HttpGet("get")]
-        public async Task<IActionResult> FetchUserHabit(Guid userId)
+        public async Task<IActionResult> FetchUserHabit()
         {
-            throw new NotImplementedException();
+            var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
+            var userId = Guid.Parse(userIdClaim.Value);
+            
+            var resp = await _mediator.Send(new GetHabitForUserRequest(userId));
+            return Ok(ApiResponseFactory.Success(resp, "Habits fetched successfully"));
         }
 
         [HttpPost("post")]

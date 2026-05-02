@@ -1,8 +1,10 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Interfaces;
+using Application.Repositories.Habits;
 using Application.Repositories.Users;
 using Infrastructure.Authentication;
 using Infrastructure.Context;
+using Infrastructure.Repositories.Habits;
 using Infrastructure.Repositories.Users;
 using Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,7 @@ namespace Infrastructure
                 .AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")))
                 .AddScoped<IUserRepository, UserRepository>()
+                .AddScoped<IHabitRepository, HabitRepository>()
                 .AddScoped<IPasswordHasher, PasswordHasher>()
                 .AddSingleton<IConnectionMultiplexer>(sp =>
                 {
