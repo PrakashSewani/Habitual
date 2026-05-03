@@ -1,5 +1,6 @@
 ﻿using Application.Models.Habits.Create;
 using Application.Models.Habits.Get;
+using Application.Models.Habits.Update;
 using Application.Models.Users.Auth;
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
@@ -24,6 +25,8 @@ namespace Application.MappingProfiles
             CreateMap<Habit, CreateHabitResponse>();
             CreateMap<Habit, GetHabitForUserResponse>();
             CreateMap<HabitLog, GetHabitLogEntryForUserResponse>();
+            CreateMap<UpdateHabit, Habit>();
+            CreateMap<UpdateHabitSchedule, HabitSchedule>();
         }
     }
 }

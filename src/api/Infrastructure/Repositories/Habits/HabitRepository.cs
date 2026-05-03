@@ -64,13 +64,23 @@ namespace Infrastructure.Repositories.Habits
 
         async Task<Habit> IHabitRepository.UpdateHabitAsync(Habit habit)
         {
-            var habitToUpdate = _context.Habits
-                .FirstOrDefault(h => h.Id == habit.Id) ?? throw new KeyNotFoundException("Habit not found");
+            var habitToUpdate = await _context.Habits
+                .Include(h => h.Schedule)
+                .FirstOrDefaultAsync(h => h.Id == habit.Id)
+                ?? throw new KeyNotFoundException("Habit not found");
+
+            if (habitToUpdate.UserId != habit.UserId)
+            {
+                throw new UnauthorizedAccessException("Requested habit is not tied to current User");
+            }
 
             habitToUpdate.Name = habit.Name;
             habitToUpdate.Description = habit.Description;
             habitToUpdate.IsActive = habit.IsActive;
-            habitToUpdate.Schedule = habit.Schedule;
+            habitToUpdate.Schedule.Type = habit.Schedule.Type;
+            habitToUpdate.Schedule.Interval = habit.Schedule.Interval;
+            habitToUpdate.Schedule.DaysOfWeek = habit.Schedule.DaysOfWeek;
+            habitToUpdate.LastModified = DateTime.UtcNow;
 
             _context.Habits.Update(habitToUpdate);
             await _context.SaveChangesAsync();

@@ -36,14 +36,20 @@ namespace WebApi.Controllers
             var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
                    ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
             var userId = Guid.Parse(userIdClaim.Value);
-            
+
             var resp = await _mediator.Send(new GetHabitForUserRequest(userId));
             return Ok(ApiResponseFactory.Success(resp, "Habits fetched successfully"));
         }
 
-        [HttpPost("post")]
+        [HttpPost("update")]
         public async Task<IActionResult> UpdateHabit(UpdateHabit updateHabit)
         {
+            var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            updateHabit.UserId = userId;
+
             var resp = await _mediator.Send(new UpdateHabitRequest(updateHabit));
             return Ok(ApiResponseFactory.Success(resp, "Habit updated successfully"));
         }
