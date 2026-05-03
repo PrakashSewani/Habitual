@@ -58,6 +58,7 @@ namespace Infrastructure.Repositories.Habits
             return await _context.Habits
                 .Where(h => h.UserId == userId)
                 .Include(h => h.Schedule)
+                .Include(h => h.HabitLog)
                 .ToListAsync();
         }
 

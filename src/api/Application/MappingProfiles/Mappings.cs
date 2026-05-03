@@ -23,6 +23,7 @@ namespace Application.MappingProfiles
             CreateMap<HabitSchedule, CreateHabitSchedule>();
             CreateMap<Habit, CreateHabitResponse>();
             CreateMap<Habit, GetHabitForUserResponse>();
+            CreateMap<HabitLog, GetHabitLogEntryForUserResponse>();
         }
     }
 }

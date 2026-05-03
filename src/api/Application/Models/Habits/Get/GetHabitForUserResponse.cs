@@ -10,5 +10,6 @@ namespace Application.Models.Habits.Get
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public CreateHabitSchedule Schedule { get; set; }
+        public List<GetHabitLogEntryForUserResponse> HabitLog { get; set; }
     }
 }
