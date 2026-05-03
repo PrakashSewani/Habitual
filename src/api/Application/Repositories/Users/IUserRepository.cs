@@ -1,7 +1,6 @@
-﻿using Application.Models.Users.Update;
-using Domain;
+﻿using Domain.Entities.Users;
 
-namespace Application.Repository
+namespace Application.Repositories.Users
 {
     public interface IUserRepository
     {

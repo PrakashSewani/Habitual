@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using Domain.Entities.Habits;
+using Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Context

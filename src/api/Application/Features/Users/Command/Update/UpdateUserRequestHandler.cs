@@ -1,8 +1,8 @@
 ﻿using Application.Interfaces;
 using Application.Models.Users.Update;
-using Application.Repository;
+using Application.Repositories.Users;
 using AutoMapper;
-using Domain;
+using Domain.Entities.Users;
 using MediatR;
 
 namespace Application.Features.Users.Command.Update

@@ -1,9 +1,9 @@
-﻿using Application.Repository;
-using Domain;
+﻿using Application.Repositories.Users;
+using Domain.Entities.Users;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repository
+namespace Infrastructure.Repositories.Users
 {
     public class UserRepository(AppDbContext context) : IUserRepository
     {
@@ -62,6 +62,8 @@ namespace Infrastructure.Repository
             userToUpdate.Name = user.Name;
             userToUpdate.PhoneNumber = user.PhoneNumber;
             userToUpdate.PasswordHash = user.PasswordHash;
+            userToUpdate.DateOfBirth = user.DateOfBirth;
+            userToUpdate.LastModified = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

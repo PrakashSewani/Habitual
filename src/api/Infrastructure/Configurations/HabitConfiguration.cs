@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.Entities.Habits;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,7 +19,7 @@ namespace Infrastructure.Configurations
                    .HasForeignKey(x => x.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(x => x.HabitStats)
+            builder.HasMany(x => x.HabitLog)
                    .WithOne(l => l.Habit)
                    .HasForeignKey(l => l.HabitId);
 

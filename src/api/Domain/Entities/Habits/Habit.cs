@@ -1,4 +1,6 @@
-﻿namespace Domain
+﻿using Domain.Entities.Users;
+
+namespace Domain.Entities.Habits
 {
     public class Habit
     {
@@ -8,9 +10,10 @@
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime LastModified { get; set; } = DateTime.UtcNow;
 
-        public List<HabitLog> HabitStats { get; set; } = [];
+        public List<HabitLog> HabitLog { get; set; } = [];
         public HabitSchedule Schedule { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Application.Models.Users.Create;
 using Application.Pipeline_Behaviour.Contract;
-using Domain;
 using MediatR;
 
 namespace Application.Features.Users.Command.Create
