@@ -10,9 +10,10 @@ namespace Domain.Entities.Habits
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime LastModified { get; set; } = DateTime.UtcNow;
 
         public List<HabitLog> HabitLog { get; set; } = [];
         public HabitSchedule Schedule { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

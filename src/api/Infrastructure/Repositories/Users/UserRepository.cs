@@ -62,6 +62,8 @@ namespace Infrastructure.Repositories.Users
             userToUpdate.Name = user.Name;
             userToUpdate.PhoneNumber = user.PhoneNumber;
             userToUpdate.PasswordHash = user.PasswordHash;
+            userToUpdate.DateOfBirth = user.DateOfBirth;
+            userToUpdate.LastModified = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
