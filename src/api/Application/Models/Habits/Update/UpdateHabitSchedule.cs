@@ -6,6 +6,6 @@ namespace Application.Models.Habits.Update
     {
         public ScheduleType Type { get; set; }
         public int? Interval { get; set; }
-        public List<string> DaysOfWeek { get; set; }
+        public List<WeekDay> DaysOfWeek { get; set; }
     }
 }

@@ -6,7 +6,7 @@ namespace Application.Features.Users.Command.Update
     {
         public UpdateUserValidators()
         {
-            RuleFor(x => x.UserRequest.Id)
+            RuleFor(x => x.UserId)
                 .NotEmpty().WithMessage("User ID is required.")
                 .Must(id => Guid.TryParse(id.ToString(), out _)).WithMessage("Invalid User ID format.");
             RuleFor(x => x.UserRequest.Name)

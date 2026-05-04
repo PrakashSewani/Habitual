@@ -9,7 +9,7 @@ namespace Infrastructure.Repositories.Habits
     {
         private readonly AppDbContext _context = context;
 
-        async Task<Habit> IHabitRepository.AddHabitAsync(Habit habit)
+        public async Task<Habit> AddHabitAsync(Habit habit)
         {
             await _context.Habits.AddAsync(habit);
             await _context.SaveChangesAsync();
@@ -17,15 +17,9 @@ namespace Infrastructure.Repositories.Habits
             return habit;
         }
 
-        async Task<bool> IHabitRepository.DeleteHabitAsync(Guid habitId, Guid userId)
+        public async Task<bool> DeleteHabitAsync(Guid habitId, Guid userId)
         {
-            var habit = await _context.Habits
-                .FirstOrDefaultAsync(h => h.Id == habitId) ?? throw new KeyNotFoundException("Habit not found");
-
-            if (habit.UserId != userId)
-            {
-                throw new UnauthorizedAccessException("Requested habit is not tied to current User");
-            }
+            var habit = await GetHabitByIdAsync(habitId, userId);
 
             _context.Habits.Remove(habit);
             await _context.SaveChangesAsync();
@@ -33,9 +27,10 @@ namespace Infrastructure.Repositories.Habits
             return true;
         }
 
-        async Task<Habit> IHabitRepository.GetHabitByIdAsync(Guid habitId, Guid userId)
+        public async Task<Habit> GetHabitByIdAsync(Guid habitId, Guid userId)
         {
             var habit = await _context.Habits
+                .Include(h => h.Schedule)
                 .FirstOrDefaultAsync(h => h.Id == habitId) ?? throw new KeyNotFoundException("Habit not found");
 
             if (habit.UserId != userId)
@@ -46,7 +41,7 @@ namespace Infrastructure.Repositories.Habits
             return habit;
         }
 
-        async Task<List<Habit>> IHabitRepository.GetHabitsByUserIdAsync(Guid userId)
+        public async Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId)
         {
             var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
 
@@ -62,12 +57,9 @@ namespace Infrastructure.Repositories.Habits
                 .ToListAsync();
         }
 
-        async Task<Habit> IHabitRepository.UpdateHabitAsync(Habit habit)
+        public async Task<Habit> UpdateHabitAsync(Habit habit)
         {
-            var habitToUpdate = await _context.Habits
-                .Include(h => h.Schedule)
-                .FirstOrDefaultAsync(h => h.Id == habit.Id)
-                ?? throw new KeyNotFoundException("Habit not found");
+            var habitToUpdate = await GetHabitByIdAsync(habit.Id, habit.UserId);
 
             if (habitToUpdate.UserId != habit.UserId)
             {

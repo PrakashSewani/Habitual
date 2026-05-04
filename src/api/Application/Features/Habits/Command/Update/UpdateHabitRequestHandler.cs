@@ -13,7 +13,9 @@ namespace Application.Features.Habits.Command.Update
 
         async Task<GetHabitForUserResponse> IRequestHandler<UpdateHabitRequest, GetHabitForUserResponse>.Handle(UpdateHabitRequest request, CancellationToken cancellationToken)
         {
-            var resp = await _habitRepository.UpdateHabitAsync(_mapper.Map<Habit>(request.UpdateHabit));
+            var habitToUpdate = _mapper.Map<Habit>(request.UpdateHabit);
+            habitToUpdate.UserId = request.UserId;
+            var resp = await _habitRepository.UpdateHabitAsync(habitToUpdate);
             return _mapper.Map<GetHabitForUserResponse>(resp);
         }
     }
