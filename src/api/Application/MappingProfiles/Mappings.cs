@@ -14,19 +14,52 @@ namespace Application.MappingProfiles
     {
         public Mappings()
         {
+            ConfigureUserMappings();
+            ConfigureHabitMappings();
+        }
+
+        private void ConfigureUserMappings()
+        {
+            // Domain -> Response
             CreateMap<User, CreateUserResponse>();
             CreateMap<User, UpdateUserResponse>();
-            CreateMap<UpdateUser, User>();
             CreateMap<User, AuthUserDTO>();
 
-            CreateMap<CreateHabit, Habit>();
-            CreateMap<CreateHabitSchedule, HabitSchedule>();
-            CreateMap<HabitSchedule, CreateHabitSchedule>();
+            // Request -> Domain
+            CreateMap<UpdateUser, User>(MemberList.None);
+        }
+
+        private void ConfigureHabitMappings()
+        {
+            // =========================
+            // CREATE
+            // =========================
+
+            CreateMap<CreateHabit, Habit>(MemberList.None);
+
+            CreateMap<CreateHabitSchedule, HabitSchedule>(MemberList.None);
+
             CreateMap<Habit, CreateHabitResponse>();
+
+
+            // =========================
+            // UPDATE
+            // =========================
+
+            CreateMap<UpdateHabit, Habit>(MemberList.None);
+
+            CreateMap<UpdateHabitSchedule, HabitSchedule>(MemberList.None);
+
+
+            // =========================
+            // GET
+            // =========================
+
             CreateMap<Habit, GetHabitForUserResponse>();
+
             CreateMap<HabitLog, GetHabitLogEntryForUserResponse>();
-            CreateMap<UpdateHabit, Habit>();
-            CreateMap<UpdateHabitSchedule, HabitSchedule>();
+
+            CreateMap<HabitSchedule, HabitScheduleResponse>();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Domain.Entities.Habits
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastModified { get; set; } = DateTime.UtcNow;
 
-        public List<HabitLog> HabitLog { get; set; } = [];
+        public List<HabitLog> HabitLogs { get; set; } = [];
         public HabitSchedule Schedule { get; set; }
     }
 }

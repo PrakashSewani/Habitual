@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506171944_updateHabitLogsDomain")]
+    partial class updateHabitLogsDomain
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,7 +173,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Habits.HabitLog", b =>
                 {
                     b.HasOne("Domain.Entities.Habits.Habit", "Habit")
-                        .WithMany("HabitLogs")
+                        .WithMany("HabitLog")
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -202,7 +205,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Habits.Habit", b =>
                 {
-                    b.Navigation("HabitLogs");
+                    b.Navigation("HabitLog");
 
                     b.Navigation("Schedule");
                 });

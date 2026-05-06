@@ -43,17 +43,11 @@ namespace Infrastructure.Repositories.Habits
 
         public async Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
-
-            if (!userExists)
-            {
-                throw new KeyNotFoundException("User not found");
-            }
-
             return await _context.Habits
+                .AsNoTracking()
                 .Where(h => h.UserId == userId)
                 .Include(h => h.Schedule)
-                .Include(h => h.HabitLog)
+                .Include(h => h.HabitLogs)
                 .ToListAsync();
         }
 

@@ -3,6 +3,6 @@
     public class GetHabitLogEntryForUserResponse
     {
         public Guid Id { get; set; }
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
     }
 }

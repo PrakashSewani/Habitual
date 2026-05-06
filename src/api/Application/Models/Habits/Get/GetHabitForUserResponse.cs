@@ -1,6 +1,4 @@
-﻿using Application.Models.Habits.Create;
-
-namespace Application.Models.Habits.Get
+﻿namespace Application.Models.Habits.Get
 {
     public class GetHabitForUserResponse
     {
@@ -9,7 +7,7 @@ namespace Application.Models.Habits.Get
         public string Description { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        public CreateHabitSchedule Schedule { get; set; }
-        public List<GetHabitLogEntryForUserResponse> HabitLog { get; set; }
+        public HabitScheduleResponse Schedule { get; set; }
+        public List<GetHabitLogEntryForUserResponse> HabitLogs { get; set; }
     }
 }

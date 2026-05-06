@@ -1,4 +1,5 @@
 using Application;
+using AutoMapper;
 using FluentValidation;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
