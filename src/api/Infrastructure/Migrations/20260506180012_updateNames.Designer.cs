@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260502201226_useDateTimeUTCTime")]
-    partial class useDateTimeUTCTime
+    [Migration("20260506180012_updateNames")]
+    partial class updateNames
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,6 +40,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -61,8 +64,8 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
@@ -81,8 +84,8 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
@@ -99,6 +102,9 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<int[]>("DaysOfWeek")
+                        .HasColumnType("integer[]");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
@@ -126,9 +132,15 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -161,7 +173,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Habits.HabitLog", b =>
                 {
                     b.HasOne("Domain.Entities.Habits.Habit", "Habit")
-                        .WithMany("HabitLog")
+                        .WithMany("HabitLogs")
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -193,7 +205,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Habits.Habit", b =>
                 {
-                    b.Navigation("HabitLog");
+                    b.Navigation("HabitLogs");
 
                     b.Navigation("Schedule");
                 });

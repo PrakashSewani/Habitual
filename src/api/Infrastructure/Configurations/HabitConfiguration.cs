@@ -19,7 +19,7 @@ namespace Infrastructure.Configurations
                    .HasForeignKey(x => x.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(x => x.HabitLog)
+            builder.HasMany(x => x.HabitLogs)
                    .WithOne(l => l.Habit)
                    .HasForeignKey(l => l.HabitId);
 

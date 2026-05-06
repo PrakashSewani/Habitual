@@ -4,7 +4,7 @@
     {
         public Guid Id { get; set; }
         public Guid HabitId { get; set; }
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
         public Habit Habit { get; set; }
     }

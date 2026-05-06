@@ -16,6 +16,7 @@ namespace Application.Features.Users.Command.Update
         async Task<UpdateUserResponse> IRequestHandler<UpdateUserRequest, UpdateUserResponse>.Handle(UpdateUserRequest request, CancellationToken cancellationToken)
         {
             var userMapped = _mapper.Map<User>(request.UserRequest);
+            userMapped.Id = request.UserId;
             userMapped.PasswordHash = _passwordHasher.HashPassword(request.UserRequest.Password);
             var resp = _mapper.Map<UpdateUserResponse>(await _userRepository.UpdateUserAsync(userMapped));
             return resp;

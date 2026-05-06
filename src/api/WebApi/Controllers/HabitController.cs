@@ -48,9 +48,7 @@ namespace WebApi.Controllers
                    ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
             var userId = Guid.Parse(userIdClaim.Value);
 
-            updateHabit.UserId = userId;
-
-            var resp = await _mediator.Send(new UpdateHabitRequest(updateHabit));
+            var resp = await _mediator.Send(new UpdateHabitRequest(userId, updateHabit));
             return Ok(ApiResponseFactory.Success(resp, "Habit updated successfully"));
         }
 

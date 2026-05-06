@@ -23,6 +23,7 @@ namespace Infrastructure
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")))
                 .AddScoped<IUserRepository, UserRepository>()
                 .AddScoped<IHabitRepository, HabitRepository>()
+                .AddScoped<IHabitLogRepository, HabitLogRepository>()
                 .AddScoped<IPasswordHasher, PasswordHasher>()
                 .AddSingleton<IConnectionMultiplexer>(sp =>
                 {

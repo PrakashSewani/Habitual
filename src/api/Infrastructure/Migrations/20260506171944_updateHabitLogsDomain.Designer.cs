@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260418211006_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260506171944_updateHabitLogsDomain")]
+    partial class updateHabitLogsDomain
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Habit", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.Habit", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,6 +39,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -55,14 +58,14 @@ namespace Infrastructure.Migrations
                     b.ToTable("Habits");
                 });
 
-            modelBuilder.Entity("Domain.HabitLog", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.HabitLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
@@ -75,14 +78,14 @@ namespace Infrastructure.Migrations
                     b.ToTable("HabitLogs");
                 });
 
-            modelBuilder.Entity("Domain.HabitLogArchive", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.HabitLogArchive", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
@@ -94,11 +97,14 @@ namespace Infrastructure.Migrations
                     b.ToTable("HabitLogsArchive", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.HabitSchedule", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.HabitSchedule", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<int[]>("DaysOfWeek")
+                        .HasColumnType("integer[]");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
@@ -117,7 +123,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("HabitSchedules");
                 });
 
-            modelBuilder.Entity("Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -126,14 +132,24 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");
@@ -143,9 +159,9 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Domain.Habit", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.Habit", b =>
                 {
-                    b.HasOne("Domain.User", "User")
+                    b.HasOne("Domain.Entities.Users.User", "User")
                         .WithMany("Habits")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -154,10 +170,10 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.HabitLog", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.HabitLog", b =>
                 {
-                    b.HasOne("Domain.Habit", "Habit")
-                        .WithMany("HabitStats")
+                    b.HasOne("Domain.Entities.Habits.Habit", "Habit")
+                        .WithMany("HabitLog")
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -165,9 +181,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("Habit");
                 });
 
-            modelBuilder.Entity("Domain.HabitLogArchive", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.HabitLogArchive", b =>
                 {
-                    b.HasOne("Domain.Habit", "Habit")
+                    b.HasOne("Domain.Entities.Habits.Habit", "Habit")
                         .WithMany()
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -176,25 +192,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Habit");
                 });
 
-            modelBuilder.Entity("Domain.HabitSchedule", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.HabitSchedule", b =>
                 {
-                    b.HasOne("Domain.Habit", "Habit")
+                    b.HasOne("Domain.Entities.Habits.Habit", "Habit")
                         .WithOne("Schedule")
-                        .HasForeignKey("Domain.HabitSchedule", "HabitId")
+                        .HasForeignKey("Domain.Entities.Habits.HabitSchedule", "HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Habit");
                 });
 
-            modelBuilder.Entity("Domain.Habit", b =>
+            modelBuilder.Entity("Domain.Entities.Habits.Habit", b =>
                 {
-                    b.Navigation("HabitStats");
+                    b.Navigation("HabitLog");
 
                     b.Navigation("Schedule");
                 });
 
-            modelBuilder.Entity("Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.Users.User", b =>
                 {
                     b.Navigation("Habits");
                 });

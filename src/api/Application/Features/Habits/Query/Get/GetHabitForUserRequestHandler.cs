@@ -12,7 +12,8 @@ namespace Application.Features.Habits.Query.Get
 
         async Task<List<GetHabitForUserResponse>> IRequestHandler<GetHabitForUserRequest, List<GetHabitForUserResponse>>.Handle(GetHabitForUserRequest request, CancellationToken cancellationToken)
         {
-            var resp = _mapper.Map<List<GetHabitForUserResponse>>(await _habitRepository.GetHabitsByUserIdAsync(request.UserId));
+            var habitsInDb = await _habitRepository.GetHabitsByUserIdAsync(request.UserId);
+            var resp = _mapper.Map<List<GetHabitForUserResponse>>(habitsInDb);
             return resp;
         }
     }

@@ -1,11 +1,13 @@
 ﻿using Domain.Common.Enums;
 
-namespace Application.Models.Habits.Create
+namespace Application.Models.Habits.Get
 {
-    public class CreateHabitSchedule
+    public class HabitScheduleResponse
     {
         public ScheduleType Type { get; set; }
-        public int? Interval { get; set; }
+
+        public int IntervalDays { get; set; }
+
         public List<WeekDay> DaysOfWeek { get; set; }
     }
 }

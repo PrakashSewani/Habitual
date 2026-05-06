@@ -48,7 +48,11 @@ namespace Webapi.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser(UpdateUser user)
         {
-            var resp = await _mediator.Send(new UpdateUserRequest(user));
+            var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
+                  ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var resp = await _mediator.Send(new UpdateUserRequest(userId, user));
             return Ok(ApiResponseFactory.Success(resp, "User updated successfully"));
         }
 
@@ -58,6 +62,7 @@ namespace Webapi.Controllers
             var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
                    ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
             var userId = Guid.Parse(userIdClaim.Value);
+
             var resp = await _mediator.Send(new DeleteUserRequest(userId));
             return Ok(ApiResponseFactory.Success(resp, "User deleted successfully"));
         }
