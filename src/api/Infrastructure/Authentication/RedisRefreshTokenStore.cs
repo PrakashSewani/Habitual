@@ -19,7 +19,7 @@ namespace Infrastructure.Authentication
             var value = await _db.StringGetAsync(key);
 
             if (!value.HasValue)
-                throw new Exception("User not found");
+                throw new Exception("User Refresh Token Expired, try logging in again");
 
             return Guid.Parse(value.ToString());
         }

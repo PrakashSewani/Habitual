@@ -27,7 +27,7 @@ namespace Application.Features.Users.Command.Create
                 Email = request.UserRequest.Email.Trim().ToLower(),
                 PasswordHash = hashedPassword,
                 PhoneNumber = request.UserRequest.PhoneNumber,
-                CreatedAt = DateTime.UtcNow
+                DateOfBirth = request.UserRequest.DateOfBirth,
             }));
 
             return resp;

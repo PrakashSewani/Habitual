@@ -11,7 +11,7 @@ namespace Domain.Entities.Users
         public string PhoneNumber { get; set; }
         public DateOnly DateOfBirth { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime LastModified { get; set; }
+        public DateTime LastModified { get; set; } = DateTime.UtcNow;
 
         public List<Habit> Habits { get; set; } = [];
     }

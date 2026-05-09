@@ -15,11 +15,43 @@ namespace Application.Features.Users.Command.Update
 
         async Task<UpdateUserResponse> IRequestHandler<UpdateUserRequest, UpdateUserResponse>.Handle(UpdateUserRequest request, CancellationToken cancellationToken)
         {
-            var userMapped = _mapper.Map<User>(request.UserRequest);
-            userMapped.Id = request.UserId;
-            userMapped.PasswordHash = _passwordHasher.HashPassword(request.UserRequest.Password);
-            var resp = _mapper.Map<UpdateUserResponse>(await _userRepository.UpdateUserAsync(userMapped));
-            return resp;
+            var userInDb = await _userRepository
+                .GetUserByIdAsync(request.UserId);
+
+            if (request.UserRequest.Name is not null)
+            {
+                userInDb.Name = request.UserRequest.Name;
+            }
+
+            if (request.UserRequest.Email is not null)
+            {
+                userInDb.Email = request.UserRequest.Email
+                    .Trim()
+                    .ToLower();
+            }
+
+            if (request.UserRequest.PhoneNumber is not null)
+            {
+                userInDb.PhoneNumber = request.UserRequest.PhoneNumber;
+            }
+
+            if (request.UserRequest.DateOfBirth.HasValue)
+            {
+                userInDb.DateOfBirth = (DateOnly)request.UserRequest.DateOfBirth;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.UserRequest.Password))
+            {
+                userInDb.PasswordHash = _passwordHasher
+                    .HashPassword(request.UserRequest.Password);
+            }
+
+            userInDb.LastModified = DateTime.UtcNow;
+
+            var updatedUser = await _userRepository
+                .UpdateUserAsync(userInDb);
+
+            return _mapper.Map<UpdateUserResponse>(updatedUser);
         }
     }
 }

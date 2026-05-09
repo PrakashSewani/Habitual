@@ -11,7 +11,7 @@ namespace Application.Features.Users.Command.Auth
                 .EmailAddress().WithMessage("Invalid email format.");
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required.")
-                .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$").WithMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
+                .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$").WithMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
         }
     }
 }

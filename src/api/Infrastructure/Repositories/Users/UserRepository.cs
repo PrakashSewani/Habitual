@@ -47,27 +47,22 @@ namespace Infrastructure.Repositories.Users
 
         public async Task<User> UpdateUserAsync(User user)
         {
-            var userToUpdate = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == user.Id)
-                ?? throw new Exception("User not found");
-
             var existingUser = await _context.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Email == user.Email);
+                .FirstOrDefaultAsync(u =>
+                    u.Email == user.Email);
 
-            if (existingUser != null && existingUser.Id != user.Id)
+            if (existingUser != null &&
+                existingUser.Id != user.Id)
+            {
                 throw new Exception("Email already exists");
+            }
 
-            userToUpdate.Email = user.Email.Trim().ToLower();
-            userToUpdate.Name = user.Name;
-            userToUpdate.PhoneNumber = user.PhoneNumber;
-            userToUpdate.PasswordHash = user.PasswordHash;
-            userToUpdate.DateOfBirth = user.DateOfBirth;
-            userToUpdate.LastModified = DateTime.UtcNow;
+            _context.Users.Update(user);
 
             await _context.SaveChangesAsync();
 
-            return userToUpdate;
+            return user;
         }
     }
 }
