@@ -7,6 +7,12 @@ using MediatR;
 
 namespace Application.Features.Users.Command.Update
 {
+    /// <summary>
+    /// UpdateUserRequestHandler is responsible for handling the UpdateUserRequest command, which updates an existing user's information in the system. It interacts with the IUserRepository to retrieve the user by their ID, update the user's details based on the provided information in the request, and save the changes back to the database. The handler also uses IPasswordHasher to hash the new password if it is provided. AutoMapper is utilized to map between the User entity and the UpdateUserResponse model. When executed, this handler will update the specified user's information in the system and return the updated user details in the response.
+    /// </summary>
+    /// <param name="userRepository">The repository used to manage user data.</param>
+    /// <param name="passwordHasher">The service used to hash user passwords.</param>
+    /// <param name="mapper">The mapper used to map user entities to DTOs.</param>
     public class UpdateUserRequestHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IMapper mapper) : IRequestHandler<UpdateUserRequest, UpdateUserResponse>
     {
         private readonly IUserRepository _userRepository = userRepository;

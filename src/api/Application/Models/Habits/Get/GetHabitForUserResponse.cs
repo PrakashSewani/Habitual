@@ -1,5 +1,13 @@
 ﻿namespace Application.Models.Habits.Get
 {
+    /// <summary>
+    /// Represents the details of a habit assigned to a user, including its metadata, schedule, and associated log
+    /// entries.
+    /// </summary>
+    /// <remarks>This response type is typically used to return comprehensive information about a specific
+    /// habit for a user, such as when retrieving habit details in a habit-tracking application. It includes the habit's
+    /// unique identifier, descriptive information, activation status, creation timestamp, scheduling details, and a
+    /// collection of log entries related to the habit's completion or progress.</remarks>
     public class GetHabitForUserResponse
     {
         public Guid Id { get; set; }

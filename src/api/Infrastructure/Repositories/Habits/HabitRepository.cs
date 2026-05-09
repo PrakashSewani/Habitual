@@ -5,10 +5,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Habits
 {
+    /// <summary>
+    /// HabitRepository is responsible for managing habit data in the database. It implements the IHabitRepository interface, providing methods to add, delete, retrieve, and update habits for users. This repository interacts with the AppDbContext to perform CRUD operations on the Habit entity, ensuring that all habit-related data is properly stored and retrieved from the database. The repository also includes necessary checks to ensure that users can only access and modify their own habits, maintaining data integrity and security.
+    /// </summary>
+    /// <param name="context">The database context used to interact with the underlying database.</param>
     public class HabitRepository(AppDbContext context) : IHabitRepository
     {
         private readonly AppDbContext _context = context;
 
+        /// <summary>
+        /// Adds a new habit to the database. This method takes a Habit object as input, adds it to the Habits DbSet, and saves the changes to the database. It returns the added Habit object, which includes any generated values such as the Id. This method is asynchronous and ensures that the habit is properly stored in the database for future retrieval and management.
+        /// </summary>
+        /// <param name="habit">The habit object to be added to the database.</param>
+        /// <returns>The added habit object with any generated values such as the Id.</returns>
         public async Task<Habit> AddHabitAsync(Habit habit)
         {
             await _context.Habits.AddAsync(habit);
@@ -17,6 +26,12 @@ namespace Infrastructure.Repositories.Habits
             return habit;
         }
 
+        /// <summary>
+        /// Deletes a habit from the database. This method takes the habit's unique identifier and the user's unique identifier as input, retrieves the habit from the database, and removes it. It ensures that the habit belongs to the specified user before deletion. The method returns a boolean indicating whether the deletion was successful.
+        /// </summary>
+        /// <param name="habitId">The unique identifier of the habit to be deleted.</param>
+        /// <param name="userId">The unique identifier of the user who owns the habit.</param>
+        /// <returns>A boolean indicating whether the habit was successfully deleted.</returns>
         public async Task<bool> DeleteHabitAsync(Guid habitId, Guid userId)
         {
             var habit = await GetHabitByIdAsync(habitId, userId);
@@ -27,6 +42,14 @@ namespace Infrastructure.Repositories.Habits
             return true;
         }
 
+        /// <summary>
+        /// Gets a habit by its unique identifier. This method takes the habit's unique identifier and the user's unique identifier as input, retrieves the habit from the database, and returns it. It ensures that the habit belongs to the specified user before returning it. If the habit is not found or does not belong to the user, appropriate exceptions are thrown.
+        /// </summary>
+        /// <param name="habitId">The unique identifier of the habit to be retrieved.</param>
+        /// <param name="userId">The unique identifier of the user who owns the habit.</param>
+        /// <returns>The habit object if found and belongs to the user.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown when the habit is not found.</exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         public async Task<Habit> GetHabitByIdAsync(Guid habitId, Guid userId)
         {
             var habit = await _context.Habits
@@ -41,6 +64,11 @@ namespace Infrastructure.Repositories.Habits
             return habit;
         }
 
+        /// <summary>
+        /// Gets all habits for a specific user. This method takes the user's unique identifier as input, retrieves all habits associated with the user from the database, and returns them as a list. The method includes related schedule and habit log information for each habit.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user whose habits are to be retrieved.</param>
+        /// <returns>A list of habits belonging to the specified user.</returns>
         public async Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId)
         {
             return await _context.Habits
@@ -51,6 +79,12 @@ namespace Infrastructure.Repositories.Habits
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Updates an existing habit in the database. This method takes a habit object as input, retrieves the corresponding habit from the database, and updates its properties. It ensures that the habit belongs to the specified user before performing the update. The method returns the updated habit object.
+        /// </summary>
+        /// <param name="habit">The habit object containing updated information.</param>
+        /// <returns>The updated habit object.</returns>
+        /// <exception cref="UnauthorizedAccessException">Thrown when the habit does not belong to the specified user.</exception>
         public async Task<Habit> UpdateHabitAsync(Habit habit)
         {
             var habitToUpdate = await GetHabitByIdAsync(habit.Id, habit.UserId);
