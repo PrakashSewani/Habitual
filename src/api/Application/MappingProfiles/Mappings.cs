@@ -41,6 +41,7 @@ namespace Application.MappingProfiles
 
             CreateMap<Habit, CreateHabitResponse>();
 
+            CreateMap<HabitSchedule, CreateHabitSchedule>();
 
             // =========================
             // UPDATE
