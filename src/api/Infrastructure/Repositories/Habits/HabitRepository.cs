@@ -20,6 +20,13 @@ namespace Infrastructure.Repositories.Habits
         /// <returns>The added habit object with any generated values such as the Id.</returns>
         public async Task<Habit> AddHabitAsync(Habit habit)
         {
+            var doesHabitWithSameNameExists = await GetHabitByNameAsync(habit);
+
+            if (doesHabitWithSameNameExists)
+            {
+                throw new InvalidOperationException("Habit with the same name already exists for the user");
+            }
+
             await _context.Habits.AddAsync(habit);
             await _context.SaveChangesAsync();
 
@@ -65,6 +72,26 @@ namespace Infrastructure.Repositories.Habits
         }
 
         /// <summary>
+        /// Gets a habit by its name. This method takes a habit object as input, retrieves the habit from the database based on its name, and returns it. It ensures that the habit belongs to the specified user before returning it. If the habit is not found or does not belong to the user, appropriate exceptions are thrown. Note that this method is currently not implemented and will throw a NotImplementedException when called.
+        /// </summary>
+        /// <param name="habit">The Habit object containing the name and user identifier.</param>
+        /// <returns>A boolean indicating whether a habit with the same name already exists for the user.</returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<bool> GetHabitByNameAsync(Habit habit)
+        {
+            var existingHabit = await _context.Habits
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.Name == habit.Name && h.UserId == habit.UserId);
+
+            if (existingHabit != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets all habits for a specific user. This method takes the user's unique identifier as input, retrieves all habits associated with the user from the database, and returns them as a list. The method includes related schedule and habit log information for each habit.
         /// </summary>
         /// <param name="userId">The unique identifier of the user whose habits are to be retrieved.</param>
@@ -92,6 +119,13 @@ namespace Infrastructure.Repositories.Habits
             if (habitToUpdate.UserId != habit.UserId)
             {
                 throw new UnauthorizedAccessException("Requested habit is not tied to current User");
+            }
+
+            var doesHabitWithSameNameExists = await GetHabitByNameAsync(habit);
+
+            if (doesHabitWithSameNameExists)
+            {
+                throw new InvalidOperationException("Habit with the same name already exists for the user");
             }
 
             habitToUpdate.Name = habit.Name;

@@ -30,6 +30,13 @@ namespace Application.Repositories.Habits
         Task<Habit> GetHabitByIdAsync(Guid habitId, Guid userId);
 
         /// <summary>
+        /// Asynchronously checks if a habit with the same name already exists for a user. This method takes a Habit object as input, which contains the name of the habit and the user's unique identifier. The method returns a boolean indicating whether a habit with the same name already exists for that user. This helps prevent duplicate habits and encourages users to create unique habits for better tracking and management.
+        /// </summary>
+        /// <param name="habit">The Habit object containing the name and user identifier.</param>
+        /// <returns>A boolean indicating whether a habit with the same name already exists for the user.</returns>
+        Task<bool> GetHabitByNameAsync(Habit habit);
+
+        /// <summary>
         /// Asynchronously updates an existing habit in the repository. This method takes a Habit object as input, which contains the updated details of the habit. The method returns the updated Habit object, allowing users to see the changes made to their habit.
         /// </summary>
         /// <param name="habit">The Habit object with updated details.</param>
