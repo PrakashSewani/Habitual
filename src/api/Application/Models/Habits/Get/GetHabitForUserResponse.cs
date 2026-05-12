@@ -1,4 +1,6 @@
-﻿namespace Application.Models.Habits.Get
+﻿using Domain.Common.Enums;
+
+namespace Application.Models.Habits.Get
 {
     /// <summary>
     /// Represents the details of a habit assigned to a user, including its metadata, schedule, and associated log
@@ -14,6 +16,7 @@
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; }
+        public HabitSource CreatedFrom { get; set; }
         public DateTime CreatedAt { get; set; }
         public HabitScheduleResponse Schedule { get; set; }
         public List<GetHabitLogEntryForUserResponse> HabitLogs { get; set; }

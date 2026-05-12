@@ -1,4 +1,6 @@
-﻿namespace Application.Models.Habits.Create
+﻿using Domain.Common.Enums;
+
+namespace Application.Models.Habits.Create
 {
     /// <summary>
     /// Represents the data required to create a new habit, including its name, description, status, and scheduling
@@ -11,6 +13,7 @@
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; }
+        public HabitSource CreatedFrom { get; set; }
         public CreateHabitSchedule Schedule { get; set; }
     }
 }
