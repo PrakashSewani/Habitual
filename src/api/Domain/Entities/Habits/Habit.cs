@@ -1,4 +1,5 @@
-﻿using Domain.Entities.Users;
+﻿using Domain.Common.Enums;
+using Domain.Entities.Users;
 
 namespace Domain.Entities.Habits
 {
@@ -42,6 +43,11 @@ namespace Domain.Entities.Habits
         /// Indicates whether the habit is currently active. This property can be used to enable or disable habits without deleting them, allowing users to temporarily pause tracking or focus on other habits.
         /// </summary>
         public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Indicates the source from which the habit was created, such as whether it was created through a web interface, mobile application, or any other platform. This property helps track the origin of the habit and can be useful for analytics or understanding user behavior across different platforms.
+        /// </summary>
+        public HabitSource CreatedFrom { get; set; }
 
         /// <summary>
         /// Creation timestamp of the habit, which indicates when the habit was created in the system.
