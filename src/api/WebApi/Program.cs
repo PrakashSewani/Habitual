@@ -1,96 +1,44 @@
 using Application;
-using AutoMapper;
-using FluentValidation;
 using Infrastructure;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.IdentityModel.Tokens;
-using Scalar.AspNetCore;
-using System.Text;
-using WebApi.Common.Responses;
+using WebApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddOpenApi();
-
 builder.Services.AddApplicationServices();
-builder.Services.AddInfrastructureServices(builder.Configuration);
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
+builder.Services.AddInfrastructureServices(
+    builder.Configuration);
 
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(
-                builder.Configuration["Jwt:Secret"]
-                ?? throw new InvalidOperationException("JWT Secret Key is not configured")
-            ))
-    };
-});
+builder.Services.AddOpenApiServices();
+
+builder.Services.AddAuthenticationServices(
+    builder.Configuration);
+
+builder.Services.AddSignalRServices();
+
+builder.Services.AddCorsPolicies();
 
 var app = builder.Build();
 
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        var exception = context.Features
-            .Get<IExceptionHandlerFeature>()?.Error;
-
-        context.Response.ContentType = "application/json";
-
-        var errors = new List<string>();
-
-        switch (exception)
-        {
-            case ValidationException validationException:
-                context.Response.StatusCode = 400;
-                errors = [.. validationException.Errors.Select(e => e.ErrorMessage)];
-                break;
-
-            case UnauthorizedAccessException:
-                context.Response.StatusCode = 401;
-                errors.Add(exception.Message);
-                break;
-
-            default:
-                context.Response.StatusCode = 500;
-                errors.Add(exception?.Message ?? "Unknown error");
-                break;
-        }
-
-        var response = ApiResponseFactory.Failure<object>(
-            "An error occured",
-            errors
-        );
-
-        await context.Response.WriteAsJsonAsync(response);
-    });
-});
+app.UseGlobalExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.UseOpenApiServices();
 }
 
 app.UseHttpsRedirection();
 
+app.UseCors("Frontend");
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapSignalRHubs();
 
 app.Run();
