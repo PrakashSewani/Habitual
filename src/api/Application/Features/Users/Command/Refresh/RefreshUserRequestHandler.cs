@@ -7,18 +7,16 @@ using MediatR;
 namespace Application.Features.Users.Command.Refresh
 {
     /// <summary>
-    /// RefreshUserRequestHandler is responsible for handling the RefreshUserRequest command, which refreshes a user's authentication tokens in the system. It interacts with the IRefreshTokenStore to retrieve the user ID associated with the provided refresh token, uses IUserRepository to retrieve user information based on the user ID, and utilizes ITokenService to generate new access and refresh tokens. The handler also updates the refresh token store with the new refresh token and deletes the old one. When executed, this handler will return an AuthResponse containing the new access token, new refresh token, and user information if the refresh operation is successful; otherwise, it will throw an exception indicating the failure reason (e.g., invalid refresh token or user not found).
+    /// RefreshUserRequestHandler is responsible for handling the RefreshUserRequest command, which is used to refresh a user's authentication tokens. It interacts with the IRefreshTokenStore to validate the provided refresh token and retrieve the associated user ID. If the refresh token is valid, it retrieves the user information from the IUserRepository, generates new access and refresh tokens using the ITokenService, and stores the new refresh token in the IRefreshTokenStore. Finally, it returns an AuthResponse containing the new access token and refresh token. If the refresh token is invalid or if any other error occurs during the process, it throws an appropriate exception (e.g., UnauthorizedAccessException for invalid tokens or a general Exception for user not found).
     /// </summary>
-    /// <param name="mapper">The mapper used to map user entities to DTOs.</param>
     /// <param name="userRepository">The repository used to manage user data.</param>
     /// <param name="tokenService">The service used to generate access and refresh tokens.</param>
     /// <param name="refreshStore">The store used to manage refresh tokens.</param>
-    public class RefreshUserRequestHandler(IMapper mapper, IUserRepository userRepository, ITokenService tokenService, IRefreshTokenStore refreshStore) : IRequestHandler<RefreshUserRequest, AuthResponse>
+    public class RefreshUserRequestHandler(IUserRepository userRepository, ITokenService tokenService, IRefreshTokenStore refreshStore) : IRequestHandler<RefreshUserRequest, AuthResponse>
     {
         private readonly IRefreshTokenStore _refreshStore = refreshStore;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IUserRepository _userRepository = userRepository;
-        private readonly IMapper _mapper = mapper;
 
         async Task<AuthResponse> IRequestHandler<RefreshUserRequest, AuthResponse>.Handle(RefreshUserRequest request, CancellationToken cancellationToken)
         {
@@ -46,8 +44,7 @@ namespace Application.Features.Users.Command.Refresh
             return new AuthResponse
             {
                 Token = newAccessToken,
-                RefreshToken = newRefreshToken,
-                UserInfo = _mapper.Map<AuthUserDTO>(user)
+                RefreshToken = newRefreshToken
             };
         }
     }

@@ -87,7 +87,7 @@ const MarketingNavbar = () => {
                     <HStack
                         gap={10}
                         position="absolute"
-                        left="46%"
+                        left="48%"
                         transform="translateX(-50%)"
                         display={{
                             base: "none",

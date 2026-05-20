@@ -4,6 +4,7 @@ using Application.Features.Users.Command.Delete;
 using Application.Features.Users.Command.Logout;
 using Application.Features.Users.Command.Refresh;
 using Application.Features.Users.Command.Update;
+using Application.Features.Users.Query.Get;
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
 using MediatR;
@@ -35,6 +36,16 @@ namespace Webapi.Controllers
         {
             var resp = await _mediator.Send(new AuthUserRequest(email, password));
             return Ok(ApiResponseFactory.Success(resp, "User logged in successfully"));
+        }
+
+        [HttpPost("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
+            var userId = Guid.Parse(userIdClaim.Value);
+            var resp = await _mediator.Send(new GetUserRequest(userId));
+            return Ok(ApiResponseFactory.Success(resp, "User retrieved successfully"));
         }
 
         [AllowAnonymous]
