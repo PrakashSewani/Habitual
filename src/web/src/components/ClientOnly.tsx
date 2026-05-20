@@ -1,20 +1,29 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import {
+    useSyncExternalStore,
+} from "react";
 
 type ClientOnlyProps = {
     children: React.ReactNode;
 };
 
+const emptySubscribe = () => {
+    return () => { };
+};
+
 const ClientOnly = ({
     children,
 }: ClientOnlyProps) => {
-    const [mounted, setMounted] =
-        useState(false);
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    const isClient =
+        useSyncExternalStore(
+            emptySubscribe,
+            () => true,
+            () => false
+        );
 
-    if (!mounted) {
+    if (!isClient) {
         return null;
     }
 

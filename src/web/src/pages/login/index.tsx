@@ -12,7 +12,6 @@ import {
     IconButton,
     Input,
     InputGroup,
-    Stack,
     Text,
     VStack,
 } from "@chakra-ui/react";
