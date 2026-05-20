@@ -5,6 +5,7 @@ using Application.Features.Users.Command.Logout;
 using Application.Features.Users.Command.Refresh;
 using Application.Features.Users.Command.Update;
 using Application.Features.Users.Query.Get;
+using Application.Models.Users.Auth;
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
 using MediatR;
@@ -32,9 +33,9 @@ namespace Webapi.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> LoginUser(string email, string password)
+        public async Task<IActionResult> LoginUser([FromBody] AuthUser authUser)
         {
-            var resp = await _mediator.Send(new AuthUserRequest(email, password));
+            var resp = await _mediator.Send(new AuthUserRequest(authUser.Email, authUser.password));
             return Ok(ApiResponseFactory.Success(resp, "User logged in successfully"));
         }
 

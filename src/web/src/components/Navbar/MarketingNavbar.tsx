@@ -12,7 +12,7 @@ import {
     Text,
 } from "@chakra-ui/react";
 
-import ColorModeToggle from "./ColorModeToggle";
+import ColorModeToggle from "../ColorModeToggle";
 
 const MarketingNavbar = () => {
 

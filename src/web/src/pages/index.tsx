@@ -1,6 +1,6 @@
 "use client";
 
-import MarketingNavbar from "@/components/MarketingNavbar";
+import MarketingNavbar from "@/components/Navbar/MarketingNavbar";
 
 import {
   Box,
