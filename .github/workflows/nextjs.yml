@@ -1,0 +1,90 @@
+name: Habitual Web CI
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+  pull_request:
+    branches:
+      - dev
+      - main
+
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: src/web
+
+    steps:
+
+      # ========================================
+      # CHECKOUT
+      # ========================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ========================================
+      # NODE
+      # ========================================
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+
+      # ========================================
+      # CACHE
+      # ========================================
+
+      - name: Restore Next.js cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            src/web/.next/cache
+
+          key: >
+            ${{ runner.os }}-nextjs-
+            ${{ hashFiles('src/web/package-lock.json') }}-
+            ${{ hashFiles('src/web/**/*.[jt]s', 'src/web/**/*.[jt]sx') }}
+
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('src/web/package-lock.json') }}-
+
+      # ========================================
+      # INSTALL
+      # ========================================
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ========================================
+      # LINT
+      # ========================================
+
+      - name: Run lint
+        run: npm run lint
+
+      # ========================================
+      # TYPE CHECK
+      # ========================================
+
+      - name: Run type check
+        run: npx tsc --noEmit
+
+      # ========================================
+      # BUILD
+      # ========================================
+
+      - name: Build application
+        run: npm run build
