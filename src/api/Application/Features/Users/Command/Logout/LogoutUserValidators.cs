@@ -7,8 +7,14 @@ namespace Application.Features.Users.Command.Logout
         public LogoutUserValidators()
         {
             RuleFor(x => x.RefreshToken)
-                .NotEmpty().WithMessage("Refresh token is required.")
-                .Matches("^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_.+/=]*$").WithMessage("Invalid refresh token format.");
+                .NotEmpty()
+                .WithMessage(
+                    "Refresh token is required."
+                )
+                .MaximumLength(512)
+                .WithMessage(
+                    "Refresh token is too long."
+                );
         }
     }
 }

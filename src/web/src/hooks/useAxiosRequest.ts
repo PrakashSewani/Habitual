@@ -4,24 +4,35 @@ import { useEffect } from "react";
 
 import axios from "axios";
 
-import axiosRequest from "../api/axios";
+import axiosRequest
+    from "../api/axios";
 
 import {
     usePathname,
     useRouter,
 } from "next/navigation";
 
-import { toast } from "react-toastify";
+import {
+    toast,
+} from "react-toastify";
 
 let isRedirecting = false;
 
 const useAxiosRequest = () => {
+
+    // ========================================
+    // HOOKS
+    // ========================================
 
     const router =
         useRouter();
 
     const pathname =
         usePathname();
+
+    // ========================================
+    // EFFECT
+    // ========================================
 
     useEffect(() => {
 
@@ -31,6 +42,7 @@ const useAxiosRequest = () => {
 
         const requestInterceptor =
             axiosRequest.interceptors.request.use(
+
                 config => {
 
                     const token =
@@ -42,6 +54,7 @@ const useAxiosRequest = () => {
                         token &&
                         !config.headers.Authorization
                     ) {
+
                         config.headers.Authorization =
                             `Bearer ${token}`;
                     }
@@ -59,12 +72,98 @@ const useAxiosRequest = () => {
 
         const responseInterceptor =
             axiosRequest.interceptors.response.use(
-                response => response,
+
+                // ========================================
+                // SUCCESS RESPONSE
+                // ========================================
+
+                response => {
+
+                    const responseData =
+                        response.data;
+
+                    // ========================================
+                    // SUCCESS = FALSE
+                    // ========================================
+
+                    if (
+                        responseData &&
+                        responseData.success === false
+                    ) {
+
+                        const errors =
+                            responseData.errors;
+
+                        // Multiple backend errors
+                        if (
+                            errors &&
+                            Array.isArray(errors)
+                        ) {
+
+                            errors.forEach(
+                                (
+                                    errorMessage: string
+                                ) => {
+
+                                    toast.error(
+                                        errorMessage
+                                    );
+                                }
+                            );
+                        }
+                        else {
+
+                            toast.error(
+                                responseData.message ||
+                                "Something went wrong."
+                            );
+                        }
+
+                        return Promise.reject(
+                            responseData
+                        );
+                    }
+
+                    // ========================================
+                    // SUCCESS TOAST
+                    // ========================================
+
+                    const method =
+                        response.config.method;
+
+                    // Only toast for non-GET requests
+                    if (
+                        method &&
+                        method !== "get" &&
+                        responseData?.message
+                    ) {
+
+                        toast.success(
+                            responseData.message
+                        );
+                    }
+
+                    return response;
+                },
+
+                // ========================================
+                // ERROR RESPONSE
+                // ========================================
 
                 async error => {
 
                     const previousRequest =
                         error?.config;
+
+                    // ========================================
+                    // BACKEND ERRORS
+                    // ========================================
+
+                    const backendErrors =
+                        error?.response?.data?.errors;
+
+                    const backendMessage =
+                        error?.response?.data?.message;
 
                     // ========================================
                     // HANDLE 401
@@ -84,7 +183,10 @@ const useAxiosRequest = () => {
                                     "refreshToken"
                                 );
 
-                            // No refresh token
+                            // ========================================
+                            // NO REFRESH TOKEN
+                            // ========================================
+
                             if (!refreshToken) {
 
                                 sessionStorage.clear();
@@ -113,7 +215,7 @@ const useAxiosRequest = () => {
                             }
 
                             // ========================================
-                            // REFRESH TOKEN REQUEST
+                            // REFRESH REQUEST
                             // ========================================
 
                             const response =
@@ -128,13 +230,19 @@ const useAxiosRequest = () => {
                                 response.data.data
                                     .accessToken;
 
-                            // Save new token
+                            // ========================================
+                            // SAVE TOKEN
+                            // ========================================
+
                             sessionStorage.setItem(
                                 "token",
                                 newAccessToken
                             );
 
-                            // Retry original request
+                            // ========================================
+                            // RETRY ORIGINAL REQUEST
+                            // ========================================
+
                             previousRequest.headers.Authorization =
                                 `Bearer ${newAccessToken}`;
 
@@ -142,7 +250,7 @@ const useAxiosRequest = () => {
                                 previousRequest
                             );
                         }
-                        catch (refreshError) {
+                        catch (refreshError: any) {
 
                             sessionStorage.clear();
 
@@ -153,9 +261,35 @@ const useAxiosRequest = () => {
 
                                 isRedirecting = true;
 
-                                toast.error(
-                                    "Session expired. Please login again."
-                                );
+                                const refreshErrors =
+                                    refreshError?.response
+                                        ?.data?.errors;
+
+                                // Refresh backend errors
+                                if (
+                                    refreshErrors &&
+                                    Array.isArray(
+                                        refreshErrors
+                                    )
+                                ) {
+
+                                    refreshErrors.forEach(
+                                        (
+                                            message: string
+                                        ) => {
+
+                                            toast.error(
+                                                message
+                                            );
+                                        }
+                                    );
+                                }
+                                else {
+
+                                    toast.error(
+                                        "Session expired. Please login again."
+                                    );
+                                }
 
                                 router.replace(
                                     "/login"
@@ -170,7 +304,39 @@ const useAxiosRequest = () => {
                         }
                     }
 
-                    return Promise.reject(error);
+                    // ========================================
+                    // NON-401 ERRORS
+                    // ========================================
+
+                    if (
+                        backendErrors &&
+                        Array.isArray(
+                            backendErrors
+                        )
+                    ) {
+
+                        backendErrors.forEach(
+                            (
+                                message: string
+                            ) => {
+
+                                toast.error(
+                                    message
+                                );
+                            }
+                        );
+                    }
+                    else {
+
+                        toast.error(
+                            backendMessage ||
+                            "Something went wrong."
+                        );
+                    }
+
+                    return Promise.reject(
+                        error
+                    );
                 }
             );
 
@@ -192,6 +358,10 @@ const useAxiosRequest = () => {
         };
 
     }, [pathname, router]);
+
+    // ========================================
+    // RETURN
+    // ========================================
 
     return axiosRequest;
 };

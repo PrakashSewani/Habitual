@@ -26,6 +26,7 @@ import { useState } from "react";
 import LoginNavbar from "@/components/Navbar/LoginNavbar";
 
 import useAxiosRequest from "@/hooks/useAxiosRequest";
+import { useRouter } from "next/router";
 
 const LoginPage = () => {
 
@@ -49,6 +50,9 @@ const LoginPage = () => {
 
     const axiosRequest =
         useAxiosRequest();
+
+    const router =
+        useRouter();
 
     // ========================================
     // VALIDATORS
@@ -148,6 +152,8 @@ Password must contain at least:
             "refreshToken",
             data.data.refreshToken
         );
+
+        router.push("/dashboard");
     };
 
     return (

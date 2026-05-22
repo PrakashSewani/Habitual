@@ -39,7 +39,7 @@ namespace Webapi.Controllers
             return Ok(ApiResponseFactory.Success(resp, "User logged in successfully"));
         }
 
-        [HttpPost("me")]
+        [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
             var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
