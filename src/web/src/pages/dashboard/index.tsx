@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    useCallback,
     useEffect,
     useMemo,
     useState,
@@ -15,6 +16,7 @@ import {
     Heading,
     HStack,
     IconButton,
+    Input,
     Skeleton,
     SkeletonText,
     Spinner,
@@ -26,13 +28,24 @@ import {
 import {
     LuChartNoAxesCombined,
     LuCircleCheckBig,
-    LuPlus,
+    LuRotateCcw,
 } from "react-icons/lu";
 
 import useAuthenticateUser
     from "@/hooks/useAuthenticateUser";
 
-import UserNavbar from "@/components/Navbar/UserNavbar";
+import useHabits, {
+    getWeekBounds,
+} from "@/hooks/useHabits";
+
+import useDebounce
+    from "@/hooks/useDebounce";
+
+import UserNavbar
+    from "@/components/Navbar/UserNavbar";
+
+import CreateHabitDialog
+    from "@/components/CreateHabitDialog";
 
 const Dashboard = () => {
 
@@ -53,63 +66,55 @@ const Dashboard = () => {
     const [currentTime, setCurrentTime] =
         useState(new Date());
 
-    const [habitsLoading, setHabitsLoading] =
-        useState(true);
-
     // ========================================
-    // MOCK DATA
+    // FILTERS
     // ========================================
 
-    const habits = useMemo(() => [
-        {
-            id: 1,
-            name: "Deep Work",
-            description:
-                "90 minutes focused coding session",
-            completed: false,
-            schedule: "Daily",
-        },
-        {
-            id: 2,
-            name: "Meditation",
-            description:
-                "15 minutes mindfulness practice",
-            completed: true,
-            schedule: "Daily",
-        },
-        {
-            id: 3,
-            name: "Reading",
-            description:
-                "Read 20 pages of Atomic Habits",
-            completed: false,
-            schedule: "Daily",
-        },
-        {
-            id: 4,
-            name: "Workout",
-            description:
-                "Strength training and cardio",
-            completed: false,
-            schedule: "Weekly",
-        },
-        {
-            id: 5,
-            name: "Journal",
-            description:
-                "Reflect and write daily thoughts",
-            completed: true,
-            schedule: "Daily",
-        },
-        {
-            id: 6,
-            name: "Hydration",
-            description:
-                "Drink 3 liters of water",
-            completed: false,
-            schedule: "Daily",
-        },
-    ], []);
+    const week = getWeekBounds();
+
+    const [search, setSearch] =
+        useState("");
+
+    const [from, setFrom] =
+        useState(week.from);
+
+    const [to, setTo] =
+        useState(week.to);
+
+    const debouncedSearch =
+        useDebounce(search, 400);
+
+    // ========================================
+    // DATA
+    // ========================================
+
+    const {
+        habits,
+        loading: habitsLoading,
+        refetch,
+    } = useHabits({
+        from,
+        to,
+        search:
+            debouncedSearch ||
+            undefined,
+    });
+
+    // ========================================
+    // FILTER HELPERS
+    // ========================================
+
+    const isCustomFilter =
+        from !== week.from ||
+        to !== week.to ||
+        search !== "";
+
+    const resetFilters = () => {
+
+        setSearch("");
+        setFrom(week.from);
+        setTo(week.to);
+    };
 
     // ========================================
     // EFFECTS
@@ -129,20 +134,225 @@ const Dashboard = () => {
 
     }, []);
 
-    useEffect(() => {
+    // ========================================
+    // HELPERS
+    // ========================================
 
-        if (!userLoading) {
+    const formatDate = (
+        date: Date
+    ) =>
+        date.toISOString()
+            .split("T")[0];
 
-            const timeout =
-                setTimeout(() => {
-                    setHabitsLoading(false);
-                }, 1400);
+    const todayString =
+        formatDate(new Date());
 
-            return () =>
-                clearTimeout(timeout);
+    const totalHabits =
+        habits.length;
+
+    const completedToday =
+        habits.filter(h =>
+            h.habitLogs.some(
+                l => l.date === todayString
+            )
+        ).length;
+
+    const pendingToday =
+        totalHabits -
+        completedToday;
+
+    const completionRate =
+        totalHabits > 0
+            ? Math.round(
+                (completedToday /
+                    totalHabits) *
+                100
+            )
+            : 0;
+
+    const getWeekDays =
+        useCallback(() => {
+
+            const now =
+                new Date();
+
+            const day =
+                now.getDay();
+
+            const diffToMonday =
+                (day + 6) % 7;
+
+            const days: string[] =
+                [];
+
+            for (
+                let i = 0;
+                i < 7;
+                i++
+            ) {
+
+                const d =
+                    new Date(now);
+
+                d.setDate(
+                    now.getDate() -
+                    diffToMonday +
+                    i
+                );
+
+                days.push(
+                    formatDate(d)
+                );
+            }
+
+            return days;
+
+        }, []);
+
+    const weekDays =
+        useMemo(
+            () =>
+                getWeekDays(),
+            [getWeekDays]
+        );
+
+    const weeklyProgress =
+        useMemo(
+            () =>
+                weekDays.map(
+                    day => {
+
+                        const completed =
+                            habits.reduce(
+                                (
+                                    sum,
+                                    h
+                                ) =>
+                                    sum +
+                                    (h.habitLogs.some(
+                                        l =>
+                                            l.date ===
+                                            day
+                                    )
+                                        ? 1
+                                        : 0),
+                                0
+                            );
+
+                        return totalHabits > 0
+                            ? Math.round(
+                                (completed /
+                                    totalHabits) *
+                                100
+                            )
+                            : 0;
+                    }
+                ),
+            [
+                habits,
+                weekDays,
+                totalHabits,
+            ]
+        );
+
+    const scheduleTypeLabel = (
+        type: number
+    ) => {
+
+        const labels:
+            Record<number, string> =
+        {
+            0: "Daily",
+            1: "Weekly",
+            2: "Interval",
+        };
+
+        return labels[type] ??
+            "Unknown";
+    };
+
+    const scheduleTypeColor = (
+        type: number
+    ) => {
+
+        switch (type) {
+
+            case 0:
+                return {
+                    bg: "rgba(99,102,241,0.12)",
+                    color: "#6366F1",
+                };
+
+            case 1:
+                return {
+                    bg: "rgba(245,158,11,0.12)",
+                    color: "#F59E0B",
+                };
+
+            case 2:
+                return {
+                    bg: "rgba(139,92,246,0.12)",
+                    color: "#8B5CF6",
+                };
+
+            default:
+                return {
+                    bg: "rgba(148,163,184,0.12)",
+                    color: "#94A3B8",
+                };
         }
+    };
 
-    }, [userLoading]);
+    const statCards = [
+        {
+            title: "Today's Habits",
+            value: totalHabits
+                .toString()
+                .padStart(2, "0"),
+            color: "#6366F1",
+            bg: "rgba(99,102,241,0.10)",
+        },
+        {
+            title: "Completed",
+            value: completedToday
+                .toString()
+                .padStart(2, "0"),
+            color: "#10B981",
+            bg: "rgba(16,185,129,0.10)",
+        },
+        {
+            title: "Pending",
+            value: pendingToday
+                .toString()
+                .padStart(2, "0"),
+            color: "#F59E0B",
+            bg: "rgba(245,158,11,0.10)",
+        },
+        {
+            title: "Completion",
+            value: `${completionRate}%`,
+            color: "#8B5CF6",
+            bg: "rgba(139,92,246,0.10)",
+        },
+    ];
+
+    const analytics = [
+        {
+            label: "Consistency",
+            value: "82%",
+            color: "#10B981",
+        },
+        {
+            label: "Focus Score",
+            value: "91%",
+            color: "#6366F1",
+        },
+        {
+            label: "Completion Rate",
+            value: `${completionRate}%`,
+            color: "#8B5CF6",
+        },
+    ];
 
     // ========================================
     // USER LOADING
@@ -154,44 +364,15 @@ const Dashboard = () => {
             <Flex
                 minH="100dvh"
                 bg="#020617"
-                position="relative"
-                overflow="hidden"
                 align="center"
                 justify="center"
             >
 
-                {/* GLOW */}
-
-                <Box
-                    position="absolute"
-                    top="-150px"
-                    left="-150px"
-                    w="450px"
-                    h="450px"
-                    bg="#6366F1"
-                    opacity="0.15"
-                    borderRadius="full"
-                    filter="blur(120px)"
-                />
-
-                <Box
-                    position="absolute"
-                    bottom="-150px"
-                    right="-150px"
-                    w="450px"
-                    h="450px"
-                    bg="#6366F1"
-                    opacity="0.10"
-                    borderRadius="full"
-                    filter="blur(120px)"
-                />
-
-                <VStack gap={6} zIndex={2}>
+                <VStack gap={6}>
 
                     <Spinner
                         size="xl"
                         color="#6366F1"
-                        borderWidth="4px"
                     />
 
                     <Text
@@ -223,19 +404,11 @@ const Dashboard = () => {
             }}
         >
 
-            {/* ========================================
-                NAVBAR
-            ======================================== */}
-
             <UserNavbar
                 userName={user?.name}
                 currentTime={currentTime}
                 logout={logout}
             />
-
-            {/* ========================================
-                CONTENT
-            ======================================== */}
 
             <Box
                 maxW="1600px"
@@ -247,93 +420,70 @@ const Dashboard = () => {
                 py={10}
             >
 
-                {/* ========================================
-                    HERO
-                ======================================== */}
+                {/* HERO */}
 
-                <Box
-                    position="relative"
+                <VStack
+                    align="start"
+                    gap={4}
                     mb={12}
                 >
 
-                    <Box
-                        position="absolute"
-                        top="-80px"
-                        left="-80px"
-                        w="320px"
-                        h="320px"
-                        bg="#6366F1"
-                        opacity="0.10"
-                        borderRadius="full"
-                        filter="blur(120px)"
-                    />
-
-                    <VStack
-                        align="start"
-                        gap={4}
-                        position="relative"
+                    <Heading
+                        fontSize={{
+                            base: "4xl",
+                            lg: "6xl",
+                        }}
+                        letterSpacing="-0.06em"
+                        color="#0F172A"
+                        _dark={{
+                            color: "#F8FAFC",
+                        }}
                     >
+                        Hello, {user?.name}
+                    </Heading>
 
-                        <Heading
-                            fontSize={{
-                                base: "4xl",
-                                lg: "6xl",
-                            }}
-                            letterSpacing="-0.06em"
-                            color="#0F172A"
-                            _dark={{
-                                color: "#F8FAFC",
-                            }}
+                    <Text
+                        fontSize="lg"
+                        color="#64748B"
+                        _dark={{
+                            color: "#94A3B8",
+                        }}
+                    >
+                        Consistency compounds
+                        into greatness.
+                    </Text>
+
+                    <HStack gap={4}>
+
+                        <Badge
+                            px={4}
+                            py={2}
+                            borderRadius="full"
+                            bg="
+                                rgba(99,102,241,0.12)
+                            "
+                            color="#6366F1"
                         >
-                            Hello, {user?.name}
-                        </Heading>
+                            {currentTime.toLocaleDateString()}
+                        </Badge>
 
-                        <Text
-                            fontSize="lg"
-                            color="#64748B"
-                            _dark={{
-                                color: "#94A3B8",
-                            }}
+                        <Badge
+                            px={4}
+                            py={2}
+                            borderRadius="full"
+                            bg="
+                                rgba(16,185,129,0.12)
+                            "
+                            color="#10B981"
                         >
-                            Consistency compounds
-                            into greatness.
-                        </Text>
+                            {currentTime.toLocaleTimeString()}
+                        </Badge>
 
-                        <HStack gap={4} flexWrap="wrap">
+                    </HStack>
 
-                            <Badge
-                                px={4}
-                                py={2}
-                                borderRadius="full"
-                                bg="
-                                    rgba(99,102,241,0.12)
-                                "
-                                color="#6366F1"
-                            >
-                                {currentTime.toLocaleDateString()}
-                            </Badge>
+                </VStack>
 
-                            <Badge
-                                px={4}
-                                py={2}
-                                borderRadius="full"
-                                bg="
-                                    rgba(16,185,129,0.12)
-                                "
-                                color="#10B981"
-                            >
-                                {currentTime.toLocaleTimeString()}
-                            </Badge>
-
-                        </HStack>
-
-                    </VStack>
-
-                </Box>
-
-                {/* ========================================
-                    STATS
-                ======================================== */}
+                {/* STATS */}
 
                 <Grid
                     templateColumns={{
@@ -344,36 +494,14 @@ const Dashboard = () => {
                     mb={12}
                 >
 
-                    {[
-                        {
-                            title:
-                                "Today's Habits",
-                            value: "06",
-                        },
-                        {
-                            title:
-                                "Completed",
-                            value: "02",
-                        },
-                        {
-                            title:
-                                "Pending",
-                            value: "04",
-                        },
-                        {
-                            title:
-                                "Completion",
-                            value: "33%",
-                        },
-                    ].map(stat => (
+                    {statCards.map(stat => (
+
                         <Box
                             key={stat.title}
                             p={6}
                             borderRadius="3xl"
                             border="1px solid"
-                            borderColor="
-                                rgba(148,163,184,0.16)
-                            "
+                            borderColor={stat.bg}
                             bg="white"
                             transition="0.25s"
                             _hover={{
@@ -382,6 +510,8 @@ const Dashboard = () => {
                             }}
                             _dark={{
                                 bg: "#111827",
+                                borderColor:
+                                    "rgba(148,163,184,0.22)",
                             }}
                         >
 
@@ -404,11 +534,7 @@ const Dashboard = () => {
                                     base: "3xl",
                                     lg: "4xl",
                                 }}
-                                color="#0F172A"
-                                _dark={{
-                                    color:
-                                        "#F8FAFC",
-                                }}
+                                color={stat.color}
                             >
                                 {stat.value}
                             </Heading>
@@ -418,46 +544,236 @@ const Dashboard = () => {
 
                 </Grid>
 
-                {/* ========================================
-                    HEADER
-                ======================================== */}
+                {/* FILTERS */}
 
                 <Flex
-                    mb={6}
+                    mb={10}
                     align="center"
                     justify="space-between"
                     flexWrap="wrap"
                     gap={4}
+                    p={5}
+                    borderRadius="3xl"
+                    border="1px solid"
+                    borderColor={
+                        isCustomFilter
+                            ? "rgba(245,158,11,0.35)"
+                            : "rgba(139,92,246,0.18)"
+                    }
+                    _dark={{
+                        borderColor: isCustomFilter
+                            ? "rgba(245,158,11,0.50)"
+                            : "rgba(99,102,241,0.35)",
+                        bg: isCustomFilter
+                            ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.12))"
+                            : "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))",
+                    }}
+                    bg={
+                        isCustomFilter
+                            ? "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.08))"
+                            : "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08))"
+                    }
+                    transition="0.3s"
+                    position="relative"
+                    overflow="hidden"
                 >
 
-                    <Heading
-                        size="lg"
-                        color="#0F172A"
-                        _dark={{
-                            color:
-                                "#F8FAFC",
-                        }}
-                    >
-                        Today&apos;s Habits
-                    </Heading>
+                    {/* CUSTOM FILTER GLOW */}
 
-                    <Button
-                        bg="#6366F1"
-                        color="white"
-                        borderRadius="full"
-                        _hover={{
-                            bg: "#5558E3",
-                        }}
+                    {isCustomFilter && (
+
+                        <Box
+                            position="absolute"
+                            top="-40px"
+                            right="-40px"
+                            w="160px"
+                            h="160px"
+                            bg="#F59E0B"
+                            opacity="0.10"
+                            borderRadius="full"
+                            filter="blur(60px)"
+                            pointerEvents="none"
+                        />
+                    )}
+
+                    <HStack
+                        gap={3}
+                        flexWrap="wrap"
+                        align="center"
                     >
-                        <LuPlus />
-                        Create Habit
-                    </Button>
+
+                        <Input
+                            placeholder="Search habits..."
+                            size="sm"
+                            borderRadius="full"
+                            w="260px"
+                            value={search}
+                            onChange={(
+                                e
+                            ) =>
+                                setSearch(
+                                    e.target.value
+                                )
+                            }
+                            borderColor="rgba(148,163,184,0.24)"
+                            _dark={{
+                                bg: "#111827",
+                                borderColor: "rgba(148,163,184,0.22)",
+                                color: "#F8FAFC",
+                                _placeholder: {
+                                    color: "#94A3B8",
+                                },
+                            }}
+                        />
+
+                        <Input
+                            type="date"
+                            size="sm"
+                            borderRadius="full"
+                            w="160px"
+                            value={from}
+                            onChange={(
+                                e
+                            ) =>
+                                setFrom(
+                                    e.target.value
+                                )
+                            }
+                            borderColor="rgba(148,163,184,0.24)"
+                            _dark={{
+                                bg: "#111827",
+                                borderColor: "rgba(148,163,184,0.22)",
+                                color: "#F8FAFC",
+                            }}
+                        />
+
+                        <Input
+                            type="date"
+                            size="sm"
+                            borderRadius="full"
+                            w="160px"
+                            value={to}
+                            onChange={(
+                                e
+                            ) =>
+                                setTo(
+                                    e.target.value
+                                )
+                            }
+                            borderColor="rgba(148,163,184,0.24)"
+                            _dark={{
+                                bg: "#111827",
+                                borderColor: "rgba(148,163,184,0.22)",
+                                color: "#F8FAFC",
+                            }}
+                        />
+
+                        {/* CUSTOM FILTER INDICATOR */}
+
+                        {isCustomFilter && (
+
+                            <HStack
+                                gap={2}
+                                align="center"
+                            >
+
+                                <Box
+                                    w="8px"
+                                    h="8px"
+                                    borderRadius="full"
+                                    bg="#F59E0B"
+                                    boxShadow="0 0 8px rgba(245,158,11,0.6)"
+                                    animation="pulse 2s infinite"
+                                />
+
+                                <Badge
+                                    px={3}
+                                    py={1}
+                                    borderRadius="full"
+                                    bg="rgba(245,158,11,0.15)"
+                                    color="#F59E0B"
+                                    _dark={{
+                                        bg: "rgba(245,158,11,0.22)",
+                                        color: "#FBBF24",
+                                    }}
+                                    fontSize="xs"
+                                    fontWeight="600"
+                                >
+                                    Custom Filter
+                                </Badge>
+
+                            </HStack>
+                        )}
+
+                        {!isCustomFilter && (
+
+                            <Badge
+                                px={3}
+                                py={1}
+                                borderRadius="full"
+                                bg="rgba(16,185,129,0.12)"
+                                color="#10B981"
+                                _dark={{
+                                    bg: "rgba(16,185,129,0.18)",
+                                    color: "#34D399",
+                                }}
+                                fontSize="xs"
+                                fontWeight="600"
+                            >
+                                Current Week
+                            </Badge>
+
+                        )}
+
+                    </HStack>
+
+                    <HStack
+                        gap={3}
+                    >
+
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            borderRadius="full"
+                            color="#64748B"
+                            _dark={{
+                                color: "#94A3B8",
+                            }}
+                            _hover={{
+                                bg: "rgba(99,102,241,0.08)",
+                                color: "#6366F1",
+                            }}
+                            onClick={
+                                resetFilters
+                            }
+                            disabled={
+                                !isCustomFilter
+                            }
+                            opacity={
+                                isCustomFilter
+                                    ? 1
+                                    : 0.4
+                            }
+                            _disabled={{
+                                cursor:
+                                    "not-allowed",
+                            }}
+                        >
+                            <LuRotateCcw />
+                            Reset
+                        </Button>
+
+                        <CreateHabitDialog
+                            onSuccess={
+                                refetch
+                            }
+                        />
+
+                    </HStack>
 
                 </Flex>
 
-                {/* ========================================
-                    LOADING
-                ======================================== */}
+                {/* LOADING */}
 
                 {habitsLoading && (
                     <Grid
@@ -482,7 +798,7 @@ const Dashboard = () => {
                                     borderRadius="3xl"
                                     border="1px solid"
                                     borderColor="
-                                        rgba(148,163,184,0.16)
+                                        rgba(148,163,184,0.22)
                                     "
                                     bg="white"
                                     _dark={{
@@ -501,222 +817,266 @@ const Dashboard = () => {
                                         mb={6}
                                     />
 
-                                    <Skeleton
-                                        h="24px"
-                                        w="90px"
-                                    />
-
                                 </Box>
                             ))}
 
                     </Grid>
                 )}
 
-                {/* ========================================
-                    HABITS GRID
-                ======================================== */}
+                {/* EMPTY */}
 
-                {!habitsLoading && (
-                    <Grid
-                        templateColumns={{
-                            base:
-                                "repeat(2,1fr)",
-                            lg:
-                                "repeat(3,1fr)",
-                            "2xl":
-                                "repeat(4,1fr)",
-                        }}
-                        gap={5}
-                        mb={12}
-                    >
+                {!habitsLoading &&
+                    habits.length === 0 && (
 
-                        {habits.map(habit => (
+                        <VStack py={24}>
 
-                            <Tooltip.Root
-                                key={habit.id}
+                            <Heading
+                                size="lg"
+                                color="#0F172A"
+                                _dark={{
+                                    color:
+                                        "#F8FAFC",
+                                }}
                             >
+                                No habits yet
+                            </Heading>
 
-                                <Tooltip.Trigger
-                                    asChild
-                                >
+                            <Text
+                                color="#64748B"
+                                _dark={{
+                                    color:
+                                        "#94A3B8",
+                                }}
+                            >
+                                Start building
+                                consistency today.
+                            </Text>
 
-                                    <Box
-                                        position="relative"
-                                        p={5}
-                                        minH="180px"
-                                        borderRadius="3xl"
-                                        border="1px solid"
-                                        borderColor="
-                                            rgba(148,163,184,0.16)
-                                        "
-                                        bg={
-                                            habit.completed
-                                                ? "rgba(16,185,129,0.10)"
-                                                : "white"
-                                        }
-                                        cursor="pointer"
-                                        overflow="hidden"
-                                        transition="0.25s"
-                                        _hover={{
-                                            transform:
-                                                "translateY(-4px)",
-                                            borderColor:
-                                                habit.completed
-                                                    ? "#10B981"
-                                                    : "#6366F1",
-                                        }}
-                                        _dark={{
-                                            bg:
-                                                habit.completed
-                                                    ? "rgba(16,185,129,0.10)"
-                                                    : "#111827",
-                                        }}
+                        </VStack>
+                    )}
+
+                {/* HABITS */}
+
+                {!habitsLoading &&
+                    habits.length > 0 && (
+
+                        <Grid
+                            templateColumns={{
+                                base:
+                                    "repeat(2,1fr)",
+                                lg:
+                                    "repeat(3,1fr)",
+                                "2xl":
+                                    "repeat(4,1fr)",
+                            }}
+                            gap={5}
+                            mb={12}
+                        >
+
+                            {habits.map(habit => {
+
+                                const isCompletedToday =
+                                    habit.habitLogs.some(
+                                        l =>
+                                            l.date ===
+                                            todayString
+                                    );
+
+                                const scheduleColors =
+                                    scheduleTypeColor(
+                                        habit.schedule.type
+                                    );
+
+                                return (
+
+                                    <Tooltip.Root
+                                        key={habit.id}
                                     >
 
-                                        {/* GLOW */}
-
-                                        <Box
-                                            position="absolute"
-                                            top="-40px"
-                                            right="-40px"
-                                            w="120px"
-                                            h="120px"
-                                            bg={
-                                                habit.completed
-                                                    ? "#10B981"
-                                                    : "#6366F1"
-                                            }
-                                            opacity="0.08"
-                                            borderRadius="full"
-                                            filter="blur(40px)"
-                                        />
-
-                                        <Flex
-                                            direction="column"
-                                            justify="space-between"
-                                            h="full"
+                                        <Tooltip.Trigger
+                                            asChild
                                         >
 
-                                            <Box>
-
-                                                <Heading
-                                                    size="sm"
-                                                    mb={3}
-                                                    color="#0F172A"
-                                                    _dark={{
-                                                        color:
-                                                            "#F8FAFC",
-                                                    }}
-                                                >
-                                                    {habit.name}
-                                                </Heading>
-
-                                                <Text
-                                                    fontSize="sm"
-                                                    lineClamp={4}
-                                                    color="#64748B"
-                                                    _dark={{
-                                                        color:
-                                                            "#94A3B8",
-                                                    }}
-                                                >
-                                                    {habit.description}
-                                                </Text>
-
-                                            </Box>
-
-                                            <Flex
-                                                align="center"
-                                                justify="space-between"
+                                            <Box
+                                                position="relative"
+                                                p={5}
+                                                minH="180px"
+                                                borderRadius="3xl"
+                                                border="1px solid"
+                                                borderColor={
+                                                    isCompletedToday
+                                                        ? "rgba(16,185,129,0.16)"
+                                                        : "rgba(148,163,184,0.22)"
+                                                }
+                                                bg={
+                                                    isCompletedToday
+                                                        ? "rgba(16,185,129,0.08)"
+                                                        : "white"
+                                                }
+                                                boxShadow={
+                                                    isCompletedToday
+                                                        ? "0 0 0 1px rgba(16,185,129,0.16)"
+                                                        : "none"
+                                                }
+                                                cursor="pointer"
+                                                overflow="hidden"
+                                                transition="0.25s"
+                                                _hover={{
+                                                    transform:
+                                                        "translateY(-4px)",
+                                                }}
+                                                _dark={{
+                                                    bg:
+                                                        isCompletedToday
+                                                            ? "rgba(16,185,129,0.08)"
+                                                            : "#111827",
+                                                }}
                                             >
 
-                                                <Badge
-                                                    px={3}
-                                                    py={1}
-                                                    borderRadius="full"
-                                                    bg="
-                                                        rgba(99,102,241,0.12)
-                                                    "
-                                                    color="#6366F1"
-                                                >
-                                                    {habit.schedule}
-                                                </Badge>
-
-                                                <Badge
-                                                    px={3}
-                                                    py={1}
-                                                    borderRadius="full"
+                                                <Box
+                                                    position="absolute"
+                                                    top="-40px"
+                                                    right="-40px"
+                                                    w="120px"
+                                                    h="120px"
                                                     bg={
-                                                        habit.completed
-                                                            ? "rgba(16,185,129,0.12)"
-                                                            : "rgba(99,102,241,0.12)"
-                                                    }
-                                                    color={
-                                                        habit.completed
+                                                        isCompletedToday
                                                             ? "#10B981"
                                                             : "#6366F1"
                                                     }
+                                                    opacity="0.08"
+                                                    borderRadius="full"
+                                                    filter="blur(40px)"
+                                                />
+
+                                                <Flex
+                                                    direction="column"
+                                                    justify="space-between"
+                                                    h="full"
                                                 >
-                                                    {habit.completed
-                                                        ? "Completed"
-                                                        : "Pending"}
-                                                </Badge>
 
-                                            </Flex>
+                                                    <Box>
 
-                                        </Flex>
+                                                        <Heading
+                                                            size="sm"
+                                                            mb={3}
+                                                            color="#0F172A"
+                                                            _dark={{
+                                                                color:
+                                                                    "#F8FAFC",
+                                                            }}
+                                                        >
+                                                            {habit.name}
+                                                        </Heading>
 
-                                        {/* COMPLETE */}
+                                                        <Text
+                                                            fontSize="sm"
+                                                            lineClamp={4}
+                                                            color="#64748B"
+                                                            _dark={{
+                                                                color:
+                                                                    "#94A3B8",
+                                                            }}
+                                                        >
+                                                            {habit.description}
+                                                        </Text>
 
-                                        <IconButton
-                                            aria-label="complete"
-                                            size="sm"
-                                            position="absolute"
-                                            top={4}
-                                            right={4}
-                                            borderRadius="full"
-                                            bg={
-                                                habit.completed
-                                                    ? "#10B981"
-                                                    : "rgba(99,102,241,0.12)"
-                                            }
-                                            color={
-                                                habit.completed
-                                                    ? "white"
-                                                    : "#6366F1"
-                                            }
-                                        >
-                                            <LuCircleCheckBig />
-                                        </IconButton>
+                                                    </Box>
 
-                                    </Box>
+                                                    <Flex
+                                                        align="center"
+                                                        justify="space-between"
+                                                    >
 
-                                </Tooltip.Trigger>
+                                                        <Badge
+                                                            px={3}
+                                                            py={1}
+                                                            borderRadius="full"
+                                                            bg={
+                                                                scheduleColors.bg
+                                                            }
+                                                            color={
+                                                                scheduleColors.color
+                                                            }
+                                                        >
+                                                            {scheduleTypeLabel(
+                                                                habit.schedule.type
+                                                            )}
+                                                        </Badge>
 
-                                <Tooltip.Positioner>
+                                                        <Badge
+                                                            px={3}
+                                                            py={1}
+                                                            borderRadius="full"
+                                                            bg={
+                                                                isCompletedToday
+                                                                    ? "rgba(16,185,129,0.12)"
+                                                                    : "rgba(245,158,11,0.12)"
+                                                            }
+                                                            color={
+                                                                isCompletedToday
+                                                                    ? "#10B981"
+                                                                    : "#F59E0B"
+                                                            }
+                                                        >
+                                                            {isCompletedToday
+                                                                ? "Completed"
+                                                                : "Pending"}
+                                                        </Badge>
 
-                                    <Tooltip.Content
-                                        bg="#111827"
-                                        color="white"
-                                        borderRadius="xl"
-                                        px={4}
-                                        py={2}
-                                        fontSize="sm"
-                                    >
-                                        Mark habit as complete
-                                    </Tooltip.Content>
+                                                    </Flex>
 
-                                </Tooltip.Positioner>
+                                                </Flex>
 
-                            </Tooltip.Root>
-                        ))}
+                                                <IconButton
+                                                    aria-label="complete"
+                                                    size="sm"
+                                                    position="absolute"
+                                                    top={4}
+                                                    right={4}
+                                                    borderRadius="full"
+                                                    bg={
+                                                        isCompletedToday
+                                                            ? "#10B981"
+                                                            : "rgba(245,158,11,0.12)"
+                                                    }
+                                                    color={
+                                                        isCompletedToday
+                                                            ? "white"
+                                                            : "#F59E0B"
+                                                    }
+                                                >
+                                                    <LuCircleCheckBig />
+                                                </IconButton>
 
-                    </Grid>
-                )}
+                                            </Box>
 
-                {/* ========================================
-                    ANALYTICS
-                ======================================== */}
+                                        </Tooltip.Trigger>
+
+                                        <Tooltip.Positioner>
+
+                                            <Tooltip.Content
+                                                bg="#111827"
+                                                color="white"
+                                                borderRadius="xl"
+                                                px={4}
+                                                py={2}
+                                                fontSize="sm"
+                                            >
+                                                Mark habit as
+                                                complete
+                                            </Tooltip.Content>
+
+                                        </Tooltip.Positioner>
+
+                                    </Tooltip.Root>
+                                );
+                            })}
+
+                        </Grid>
+                    )}
+
+                {/* ANALYTICS */}
 
                 <Grid
                     templateColumns={{
@@ -733,7 +1093,7 @@ const Dashboard = () => {
                         borderRadius="3xl"
                         border="1px solid"
                         borderColor="
-                            rgba(148,163,184,0.16)
+                            rgba(148,163,184,0.22)
                         "
                         bg="white"
                         _dark={{
@@ -768,17 +1128,20 @@ const Dashboard = () => {
                             gap={4}
                         >
 
-                            {[45, 70, 85, 35, 90, 65, 55]
+                            {weeklyProgress
                                 .map((height, index) => (
+
                                     <Box
                                         key={index}
                                         flex="1"
                                         h={`${height}%`}
                                         borderRadius="2xl"
                                         bg={
-                                            index === 4
-                                                ? "#6366F1"
-                                                : "rgba(99,102,241,0.18)"
+                                            height >= 80
+                                                ? "#10B981"
+                                                : height >= 50
+                                                    ? "#6366F1"
+                                                    : "#F59E0B"
                                         }
                                     />
                                 ))}
@@ -794,7 +1157,7 @@ const Dashboard = () => {
                         borderRadius="3xl"
                         border="1px solid"
                         borderColor="
-                            rgba(148,163,184,0.16)
+                            rgba(148,163,184,0.22)
                         "
                         bg="white"
                         _dark={{
@@ -819,23 +1182,8 @@ const Dashboard = () => {
                             gap={6}
                         >
 
-                            {[
-                                {
-                                    label:
-                                        "Consistency",
-                                    value: "82%",
-                                },
-                                {
-                                    label:
-                                        "Focus Score",
-                                    value: "91%",
-                                },
-                                {
-                                    label:
-                                        "Completion Rate",
-                                    value: "67%",
-                                },
-                            ].map(item => (
+                            {analytics.map(item => (
+
                                 <Box
                                     key={item.label}
                                 >
@@ -857,7 +1205,7 @@ const Dashboard = () => {
 
                                         <Text
                                             fontWeight="700"
-                                            color="#6366F1"
+                                            color={item.color}
                                         >
                                             {item.value}
                                         </Text>
@@ -876,7 +1224,7 @@ const Dashboard = () => {
                                         <Box
                                             h="full"
                                             w={item.value}
-                                            bg="#6366F1"
+                                            bg={item.color}
                                             borderRadius="full"
                                         />
 

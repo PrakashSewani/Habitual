@@ -6,20 +6,36 @@ using MediatR;
 namespace Application.Features.Habits.Query.Get
 {
     /// <summary>
-    /// GetHabitForUserRequestHandler is responsible for handling the GetHabitForUserRequest query, which retrieves a list of habits for a specific user. It interacts with the IHabitRepository to fetch the habits associated with the user's unique identifier and uses AutoMapper to map the retrieved habit entities to a list of GetHabitForUserResponse objects. When executed, this handler will return the details of each habit associated with the specified user in the response.
+    /// Retrieves habits for a user with optional
+    /// date range and search filtering.
     /// </summary>
-    /// <param name="habitRepository">The repository used to manage habits.</param>
-    /// <param name="mapper">The AutoMapper instance used for mapping between models and entities.</param>
+    /// <param name="habitRepository">
+    /// Repository used for habit operations.
+    /// </param>
+    /// <param name="mapper">
+    /// AutoMapper instance.
+    /// </param>
     public class GetHabitForUserRequestHandler(IHabitRepository habitRepository, IMapper mapper) : IRequestHandler<GetHabitForUserRequest, List<GetHabitForUserResponse>>
     {
         private readonly IHabitRepository _habitRepository = habitRepository;
         private readonly IMapper _mapper = mapper;
 
-        async Task<List<GetHabitForUserResponse>> IRequestHandler<GetHabitForUserRequest, List<GetHabitForUserResponse>>.Handle(GetHabitForUserRequest request, CancellationToken cancellationToken)
+        public async Task<List<GetHabitForUserResponse>> Handle(GetHabitForUserRequest request, CancellationToken cancellationToken)
         {
-            var habitsInDb = await _habitRepository.GetHabitsByUserIdAsync(request.UserId);
-            var resp = _mapper.Map<List<GetHabitForUserResponse>>(habitsInDb);
-            return resp;
+            var habitsInDb = await _habitRepository.GetHabitsByUserIdAsync(request.UserId, request.From, request.To);
+
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var search = request.Search.Trim().ToLower();
+
+                habitsInDb = habitsInDb.Where(x => x.Name.ToLower().Contains(search) || (x.Description != null && x.Description.ToLower().Contains(search))).ToList();
+            }
+
+            habitsInDb = habitsInDb.OrderByDescending(x => x.CreatedAt).ToList();
+
+            var response = _mapper.Map<List<GetHabitForUserResponse>>(habitsInDb);
+
+            return response;
         }
     }
 }

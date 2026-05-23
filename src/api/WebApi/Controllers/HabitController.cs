@@ -31,13 +31,13 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("get")]
-        public async Task<IActionResult> FetchUserHabit()
+        public async Task<IActionResult> FetchUserHabit([FromQuery] DateOnly? from, [FromQuery] DateOnly? to, [FromQuery] string? search)
         {
             var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
                    ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
             var userId = Guid.Parse(userIdClaim.Value);
 
-            var resp = await _mediator.Send(new GetHabitForUserRequest(userId));
+            var resp = await _mediator.Send(new GetHabitForUserRequest(userId, from, to, search));
             return Ok(ApiResponseFactory.Success(resp, "Habits fetched successfully"));
         }
 

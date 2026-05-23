@@ -18,8 +18,10 @@ namespace Application.Repositories.Habits
         /// Asynchronously retrieves all habits for a specific user. This method takes the user's unique identifier as input and returns a list of Habit objects associated with that user. This allows users to view and manage their existing habits.
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="from">Optional start date to filter habit logs.</param>
+        /// <param name="to">Optional end date to filter habit logs.</param>
         /// <returns>A list of Habit objects associated with the specified user.</returns>
-        Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId);
+        Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId, DateOnly? from = null, DateOnly? to = null);
 
         /// <summary>
         /// Asynchronously retrieves a specific habit for a user by its unique identifier. This method takes the habit's unique identifier and the user's unique identifier as input and returns the corresponding Habit object if found. This allows users to view and manage a specific habit.

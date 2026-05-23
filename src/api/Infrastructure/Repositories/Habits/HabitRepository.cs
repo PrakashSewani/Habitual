@@ -92,18 +92,31 @@ namespace Infrastructure.Repositories.Habits
         }
 
         /// <summary>
-        /// Gets all habits for a specific user. This method takes the user's unique identifier as input, retrieves all habits associated with the user from the database, and returns them as a list. The method includes related schedule and habit log information for each habit.
+        /// Gets all habits for a specific user. This method takes the user's unique identifier as input, retrieves all habits associated with the user from the database, and returns them as a list. The method includes related schedule and habit log information for each habit. Habit logs are filtered in-memory by the optional date range.
         /// </summary>
         /// <param name="userId">The unique identifier of the user whose habits are to be retrieved.</param>
+        /// <param name="from">Optional start date to filter habit logs.</param>
+        /// <param name="to">Optional end date to filter habit logs.</param>
         /// <returns>A list of habits belonging to the specified user.</returns>
-        public async Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId)
+        public async Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId, DateOnly? from = null, DateOnly? to = null)
         {
-            return await _context.Habits
+            var habits = await _context.Habits
                 .AsNoTracking()
                 .Where(h => h.UserId == userId)
                 .Include(h => h.Schedule)
                 .Include(h => h.HabitLogs)
                 .ToListAsync();
+
+            foreach (var habit in habits)
+            {
+                habit.HabitLogs = habit.HabitLogs
+                    .Where(log =>
+                        (!from.HasValue || log.Date >= from.Value) &&
+                        (!to.HasValue || log.Date <= to.Value))
+                    .ToList();
+            }
+
+            return habits;
         }
 
         /// <summary>
