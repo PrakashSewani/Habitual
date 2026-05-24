@@ -2,6 +2,7 @@
 using Application.Models.Users.Auth;
 using Application.Repositories.Users;
 using AutoMapper;
+using Domain.Common.Enums;
 using MediatR;
 
 namespace Application.Features.Users.Command.Refresh
@@ -31,15 +32,19 @@ namespace Application.Features.Users.Command.Refresh
 
             await _refreshStore.DeleteAsync(request.RefreshToken);
 
+            var sourceValue = await _refreshStore.GetSourceAsync(request.RefreshToken);
+            var source = int.TryParse(sourceValue, out var sourceInt) ? (Source)sourceInt : Source.Web;
+
             var newRefreshToken = _tokenService.GenerateRefreshToken();
 
             await _refreshStore.StoreAsync(
                 newRefreshToken,
                 user.Id,
-                TimeSpan.FromDays(7)
+                TimeSpan.FromDays(7),
+                ((int)source).ToString()
             );
 
-            var newAccessToken = _tokenService.GenerateAccessToken(user.Id, user.Email);
+            var newAccessToken = _tokenService.GenerateAccessToken(user.Id, user.Email, source);
 
             return new AuthResponse
             {

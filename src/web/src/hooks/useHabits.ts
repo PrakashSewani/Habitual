@@ -166,6 +166,7 @@ const useHabits = (
 
     return {
         habits,
+        setHabits,
         loading,
         error,
         refetch: fetch,

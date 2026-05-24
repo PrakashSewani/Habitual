@@ -32,9 +32,11 @@ import {
     LuChevronLeft,
     LuChevronRight,
     LuCircleCheckBig,
+    LuGlobe,
     LuPlus,
     LuRotateCcw,
     LuSearch,
+    LuSmartphone,
 } from "react-icons/lu";
 
 import useAuthenticateUser
@@ -49,6 +51,9 @@ import useHabits, {
 
 import useDebounce
     from "@/hooks/useDebounce";
+
+import useSignalR
+    from "@/hooks/useSignalR";
 
 import UserNavbar
     from "@/components/Navbar/UserNavbar";
@@ -129,6 +134,7 @@ const Dashboard = () => {
 
     const {
         habits,
+        setHabits,
         loading: habitsLoading,
         refetch,
     } = useHabits({
@@ -167,11 +173,57 @@ const Dashboard = () => {
 
         try {
 
-            await axiosRequest.put(
-                `/HabitLog?habitId=${habitId}&date=${selectedDate}`
-            );
+            const response =
+                await axiosRequest.put(
+                    `/HabitLog?habitId=${habitId}&date=${selectedDate}`
+                );
 
-            await refetch();
+            const completed =
+                response.data.data as boolean;
+
+            // ========================================
+            // OPTIMISTIC UPDATE
+            // ========================================
+
+            setHabits(prev =>
+                prev.map(h => {
+
+                    if (h.id !== habitId) {
+
+                        return h;
+                    }
+
+                    const logs = [
+                        ...h.habitLogs,
+                    ];
+
+                    const idx = logs.findIndex(
+                        l =>
+                            l.date ===
+                            selectedDate
+                    );
+
+                    if (completed && idx < 0) {
+
+                        logs.push({
+                            id: `${habitId}-${selectedDate}`,
+                            date: selectedDate,
+                        });
+                    }
+                    else if (
+                        !completed &&
+                        idx >= 0
+                    ) {
+
+                        logs.splice(idx, 1);
+                    }
+
+                    return {
+                        ...h,
+                        habitLogs: logs,
+                    };
+                })
+            );
         }
         finally {
 
@@ -186,6 +238,74 @@ const Dashboard = () => {
             });
         }
     };
+
+    // ========================================
+    // SIGNALR
+    // ========================================
+
+    const { onHabitLogUpdated } =
+        useSignalR();
+
+    useEffect(() => {
+
+        const unsubscribe =
+            onHabitLogUpdated(
+                payload => {
+
+                    setHabits(prev =>
+                        prev.map(h => {
+
+                            if (
+                                h.id !==
+                                payload.habitId
+                            ) {
+
+                                return h;
+                            }
+
+                            const logs = [
+                                ...h.habitLogs,
+                            ];
+
+                            const idx = logs.findIndex(
+                                l =>
+                                    l.date ===
+                                    payload.date
+                            );
+
+                            if (
+                                payload.completed &&
+                                idx < 0
+                            ) {
+
+                                logs.push({
+                                    id: `${payload.habitId}-${payload.date}`,
+                                    date: payload.date,
+                                });
+                            }
+                            else if (
+                                !payload.completed &&
+                                idx >= 0
+                            ) {
+
+                                logs.splice(idx, 1);
+                            }
+
+                            return {
+                                ...h,
+                                habitLogs: logs,
+                            };
+                        })
+                    );
+                }
+            );
+
+        return unsubscribe;
+
+    }, [
+        onHabitLogUpdated,
+        setHabits,
+    ]);
 
     // ========================================
     // FILTER HELPERS
@@ -1134,6 +1254,7 @@ const Dashboard = () => {
                         overflowY="auto"
                         pr={2}
                         pb={4}
+                        pt={4}
                     >
 
                         {/* LOADING */}
@@ -1281,7 +1402,13 @@ const Dashboard = () => {
                                                         ? "0 0 0 1px rgba(16,185,129,0.16)"
                                                         : "none"
                                                 }
-                                                cursor="pointer"
+                                                cursor={
+                                                    togglingIds.has(
+                                                        habit.id
+                                                    )
+                                                        ? "wait"
+                                                        : "pointer"
+                                                }
                                                 overflow="hidden"
                                                 transition="0.25s"
                                                 _hover={{
@@ -1293,6 +1420,17 @@ const Dashboard = () => {
                                                         isCompletedSelected
                                                             ? "rgba(16,185,129,0.08)"
                                                             : "#111827",
+                                                }}
+                                                onClick={() => {
+                                                    if (
+                                                        !togglingIds.has(
+                                                            habit.id
+                                                        )
+                                                    ) {
+                                                        toggleHabitLog(
+                                                            habit.id
+                                                        );
+                                                    }
                                                 }}
                                             >
 
@@ -1316,6 +1454,7 @@ const Dashboard = () => {
                                                     direction="column"
                                                     justify="space-between"
                                                     h="full"
+                                                    pr={10}
                                                 >
 
                                                     <Box>
@@ -1353,21 +1492,44 @@ const Dashboard = () => {
                                                         justify="space-between"
                                                     >
 
-                                                        <Badge
-                                                            px={3}
-                                                            py={1}
-                                                            borderRadius="full"
-                                                            bg={
-                                                                scheduleColors.bg
-                                                            }
-                                                            color={
-                                                                scheduleColors.color
-                                                            }
-                                                        >
-                                                            {scheduleTypeLabel(
-                                                                habit.schedule.type
-                                                            )}
-                                                        </Badge>
+                                                        <HStack gap={2}>
+
+                                                            <Badge
+                                                                px={3}
+                                                                py={1}
+                                                                borderRadius="full"
+                                                                bg={
+                                                                    scheduleColors.bg
+                                                                }
+                                                                color={
+                                                                    scheduleColors.color
+                                                                }
+                                                            >
+                                                                {scheduleTypeLabel(
+                                                                    habit.schedule.type
+                                                                )}
+                                                            </Badge>
+
+                                                            <Box
+                                                                color="#64748B"
+                                                                _dark={{
+                                                                    color: "#94A3B8",
+                                                                }}
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                justifyContent="center"
+                                                                title={
+                                                                    habit.createdFrom === 2
+                                                                        ? "Mobile"
+                                                                        : "Web"
+                                                                }
+                                                            >
+                                                                {habit.createdFrom === 2
+                                                                    ? <LuSmartphone size={13} />
+                                                                    : <LuGlobe size={13} />}
+                                                            </Box>
+
+                                                        </HStack>
 
                                                         <Badge
                                                             px={3}
@@ -1415,11 +1577,7 @@ const Dashboard = () => {
                                                             habit.id
                                                         )
                                                     }
-                                                    onClick={() =>
-                                                        toggleHabitLog(
-                                                            habit.id
-                                                        )
-                                                    }
+                                                    pointerEvents="none"
                                                 >
                                                     <LuCircleCheckBig />
                                                 </IconButton>

@@ -1,14 +1,24 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace WebApi.Hubs
 {
+    [Authorize]
     public class HabitHub : Hub
     {
         public override async Task OnConnectedAsync()
         {
-            foreach (var claim in Context.User.Claims)
+            var user = Context.User;
+            if (user?.Identity?.IsAuthenticated == true)
             {
-                Console.WriteLine($"{claim.Type}: {claim.Value}");
+                foreach (var claim in user.Claims)
+                {
+                    Console.WriteLine($"{claim.Type}: {claim.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("HabitHub: Anonymous connection attempt");
             }
 
             await base.OnConnectedAsync();

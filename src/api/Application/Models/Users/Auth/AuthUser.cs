@@ -1,4 +1,6 @@
-﻿namespace Application.Models.Users.Auth
+﻿using Domain.Common.Enums;
+
+namespace Application.Models.Users.Auth
 {
     /// <summary>
     /// Represents a data transfer object containing authentication-related user information.
@@ -9,5 +11,6 @@
     {
         public string Email { get; set; }
         public string password { get; set; }
+        public Source Source { get; set; }
     }
 }

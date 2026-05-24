@@ -16,7 +16,7 @@ namespace Application.Models.Habits.Get
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; }
-        public HabitSource CreatedFrom { get; set; }
+        public Source CreatedFrom { get; set; }
         public DateTime CreatedAt { get; set; }
         public HabitScheduleResponse Schedule { get; set; }
         public List<GetHabitLogEntryForUserResponse> HabitLogs { get; set; }

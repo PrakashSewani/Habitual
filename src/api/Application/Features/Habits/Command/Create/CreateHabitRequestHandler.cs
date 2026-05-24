@@ -21,6 +21,7 @@ namespace Application.Features.Habits.Command.Create
             var habit = _mapper.Map<Habit>(request.CreateHabit);
 
             habit.UserId = request.UserId;
+            habit.CreatedFrom = request.Source;
 
             var addHabit = await _habitRepository.AddHabitAsync(habit);
 

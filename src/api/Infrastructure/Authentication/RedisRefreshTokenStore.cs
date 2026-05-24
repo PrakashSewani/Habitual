@@ -25,13 +25,28 @@ namespace Infrastructure.Authentication
             if (!value.HasValue)
                 throw new Exception("User Refresh Token Expired, try logging in again");
 
-            return Guid.Parse(value.ToString());
+            var stored = value.ToString();
+            var userIdPart = stored.Contains('|') ? stored.Split('|')[0] : stored;
+            return Guid.Parse(userIdPart);
         }
 
-        async Task IRefreshTokenStore.StoreAsync(string token, Guid userId, TimeSpan expiry)
+        async Task<string> IRefreshTokenStore.GetSourceAsync(string token)
         {
             var key = $"refresh:{token}";
-            await _db.StringSetAsync(key, userId.ToString(), expiry);
+            var value = await _db.StringGetAsync(key);
+
+            if (!value.HasValue)
+                throw new Exception("User Refresh Token Expired, try logging in again");
+
+            var stored = value.ToString();
+            return stored.Contains('|') ? stored.Split('|')[1] : string.Empty;
+        }
+
+        async Task IRefreshTokenStore.StoreAsync(string token, Guid userId, TimeSpan expiry, string source)
+        {
+            var key = $"refresh:{token}";
+            var value = string.IsNullOrEmpty(source) ? userId.ToString() : $"{userId}|{source}";
+            await _db.StringSetAsync(key, value, expiry);
         }
     }
 }

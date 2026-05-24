@@ -1,5 +1,6 @@
 ﻿using Application.Models.Habits.Create;
 using Application.Pipeline_Behaviour.Contract;
+using Domain.Common.Enums;
 using MediatR;
 
 namespace Application.Features.Habits.Command.Create
@@ -9,9 +10,11 @@ namespace Application.Features.Habits.Command.Create
     /// </summary>
     /// <param name="UserId">The unique identifier of the user.</param>
     /// <param name="createHabit">The details of the habit to be created.</param>
-    public class CreateHabitRequest(Guid UserId, CreateHabit createHabit) : IRequest<CreateHabitResponse>, IValidate
+    /// <param name="source">The source origin of the habit creation request.</param>
+    public class CreateHabitRequest(Guid UserId, CreateHabit createHabit, Source source) : IRequest<CreateHabitResponse>, IValidate
     {
         public Guid UserId { get; set; } = UserId;
         public CreateHabit CreateHabit { get; set; } = createHabit;
+        public Source Source { get; set; } = source;
     }
 }

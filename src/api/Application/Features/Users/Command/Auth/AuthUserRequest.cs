@@ -1,5 +1,6 @@
 ﻿using Application.Models.Users.Auth;
 using Application.Pipeline_Behaviour.Contract;
+using Domain.Common.Enums;
 using MediatR;
 
 namespace Application.Features.Users.Command.Auth
@@ -9,9 +10,10 @@ namespace Application.Features.Users.Command.Auth
     /// </summary>
     /// <param name="email">The email of the user.</param>
     /// <param name="password">The password of the user.</param>
-    public class AuthUserRequest(string email, string password) : IRequest<AuthResponse>, IValidate
+    public class AuthUserRequest(string email, string password, Source habitSource) : IRequest<AuthResponse>, IValidate
     {
         public string Email { get; set; } = email;
         public string Password { get; set; } = password;
+        public Source Source { get; set; } = habitSource;
     }
 }

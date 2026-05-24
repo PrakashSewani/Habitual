@@ -3,6 +3,10 @@
 import Link from "next/link";
 
 import {
+    usePathname,
+} from "next/navigation";
+
+import {
     Avatar,
     Badge,
     Box,
@@ -41,6 +45,8 @@ const UserNavbar = ({
     currentTime,
     logout,
 }: UserNavbarProps) => {
+
+    const pathname = usePathname();
 
     const {
         theme,
@@ -117,35 +123,32 @@ const UserNavbar = ({
                     <Link href="/dashboard">
 
                         <Text
-                            fontWeight="700"
-                            color="#6366F1"
-                            cursor="pointer"
-                        >
-                            Dashboard
-                        </Text>
-
-                    </Link>
-
-                    <Link href="/habits">
-
-                        <Text
-                            fontWeight="500"
-                            color="#64748B"
+                            fontWeight={
+                                pathname === "/dashboard"
+                                    ? "700"
+                                    : "500"
+                            }
+                            color={
+                                pathname === "/dashboard"
+                                    ? "#6366F1"
+                                    : "#64748B"
+                            }
                             transition="0.2s"
                             cursor="pointer"
                             _hover={{
                                 color: "#6366F1",
                             }}
                             _dark={{
-                                color: "#94A3B8",
+                                color:
+                                    pathname === "/dashboard"
+                                        ? "#6366F1"
+                                        : "#94A3B8",
                             }}
                         >
-                            Habits
+                            Dashboard
                         </Text>
 
                     </Link>
-
-                    {/* PREMIUM */}
 
                     <Link href="/analytics">
 
@@ -155,14 +158,25 @@ const UserNavbar = ({
                         >
 
                             <Text
-                                fontWeight="500"
-                                color="#64748B"
+                                fontWeight={
+                                    pathname === "/analytics"
+                                        ? "700"
+                                        : "500"
+                                }
+                                color={
+                                    pathname === "/analytics"
+                                        ? "#6366F1"
+                                        : "#64748B"
+                                }
                                 transition="0.2s"
                                 _hover={{
                                     color: "#6366F1",
                                 }}
                                 _dark={{
-                                    color: "#94A3B8",
+                                    color:
+                                        pathname === "/analytics"
+                                            ? "#6366F1"
+                                            : "#94A3B8",
                                 }}
                             >
                                 Deep Analytics

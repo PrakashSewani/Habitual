@@ -35,13 +35,14 @@ namespace Application.Features.Users.Command.Auth
 
             if (!isPasswordValid) throw new Exception("Username/Password is incorrect");
 
-            var accessToken = _tokenService.GenerateAccessToken(userInDb.Id, userInDb.Email);
+            var accessToken = _tokenService.GenerateAccessToken(userInDb.Id, userInDb.Email, request.Source);
             var refreshToken = _tokenService.GenerateRefreshToken();
 
             await _refreshTokenStore.StoreAsync(
                 refreshToken,
                 userInDb.Id,
-                TimeSpan.FromDays(7)
+                TimeSpan.FromDays(7),
+                ((int)request.Source).ToString()
             );
 
             return new AuthResponse

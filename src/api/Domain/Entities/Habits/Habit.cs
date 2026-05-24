@@ -47,7 +47,7 @@ namespace Domain.Entities.Habits
         /// <summary>
         /// Indicates the source from which the habit was created, such as whether it was created through a web interface, mobile application, or any other platform. This property helps track the origin of the habit and can be useful for analytics or understanding user behavior across different platforms.
         /// </summary>
-        public HabitSource CreatedFrom { get; set; }
+        public Source CreatedFrom { get; set; }
 
         /// <summary>
         /// Creation timestamp of the habit, which indicates when the habit was created in the system.

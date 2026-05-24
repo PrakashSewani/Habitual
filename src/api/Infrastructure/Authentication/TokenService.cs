@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Application.Abstractions.Authentication;
+using Domain.Common.Enums;
 using Microsoft.IdentityModel.Tokens;
 namespace Infrastructure.Authentication
 {
@@ -19,7 +20,7 @@ namespace Infrastructure.Authentication
         /// <param name="userId">The unique identifier of the user.</param>
         /// <param name="email">The email address of the user.</param>
         /// <returns>A JWT access token as a string.</returns>
-        public string GenerateAccessToken(Guid userId, string email)
+        public string GenerateAccessToken(Guid userId, string email, Source source)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -28,6 +29,7 @@ namespace Infrastructure.Authentication
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
+                new Claim("source", ((int)source).ToString()),
             };
 
             var token = new JwtSecurityToken(

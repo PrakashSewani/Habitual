@@ -4,6 +4,7 @@ using Application.Features.Habits.Command.Update;
 using Application.Features.Habits.Query.Get;
 using Application.Models.Habits.Create;
 using Application.Models.Habits.Update;
+using Domain.Common.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,12 @@ namespace WebApi.Controllers
                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
             var userId = Guid.Parse(userIdClaim.Value);
 
-            var resp = await _mediator.Send(new CreateHabitRequest(userId, habit));
+            var sourceClaim = User.FindFirst("source");
+            var source = sourceClaim != null && int.TryParse(sourceClaim.Value, out var sourceInt)
+                ? (Source)sourceInt
+                : Source.Web;
+
+            var resp = await _mediator.Send(new CreateHabitRequest(userId, habit, source));
             return Ok(ApiResponseFactory.Success(resp, "Habit created successfully"));
         }
 

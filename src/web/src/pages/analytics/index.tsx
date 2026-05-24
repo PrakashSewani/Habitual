@@ -19,6 +19,7 @@ import {
     LuLayers,
     LuActivity,
     LuCalendarDays,
+    LuCalendarCheck,
     LuTrendingUp,
 } from "react-icons/lu";
 
@@ -307,7 +308,7 @@ const Heatmap = ({
     );
 
     const levels = [
-        "transparent",
+        "rgba(148,163,184,0.12)",
         "#BBF7D0",
         "#86EFAC",
         "#4ADE80",
@@ -316,7 +317,7 @@ const Heatmap = ({
     ];
 
     const darkLevels = [
-        "transparent",
+        "rgba(148,163,184,0.12)",
         "rgba(34,197,94,0.18)",
         "rgba(34,197,94,0.35)",
         "rgba(34,197,94,0.55)",
@@ -786,22 +787,37 @@ const HabitRankings = ({
 
                         </VStack>
 
-                        <Box
-                            px={2}
+                        <HStack
+                            gap={1.5}
+                            px={2.5}
                             py={1}
-                            borderRadius="md"
-                            bg="rgba(16,185,129,0.12)"
-                            color="#10B981"
+                            borderRadius="full"
+                            bg="rgba(16,185,129,0.10)"
                             _dark={{
-                                bg: "rgba(16,185,129,0.18)",
-                                color: "#34D399",
+                                bg: "rgba(16,185,129,0.15)",
                             }}
                             fontSize="xs"
                             fontWeight="600"
                         >
-                            {s.thisWeekLogs}
-                            this week
-                        </Box>
+
+                            <LuCalendarCheck
+                                size={12}
+                                color="#10B981"
+                            />
+
+                            <Text
+                                color="#10B981"
+                                _dark={{
+                                    color: "#34D399",
+                                }}
+                                fontSize="xs"
+                                fontWeight="600"
+                            >
+                                {s.thisWeekLogs}
+                                {" "}this week
+                            </Text>
+
+                        </HStack>
 
                     </HStack>
                 ))}

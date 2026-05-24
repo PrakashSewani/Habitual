@@ -1,4 +1,6 @@
-﻿namespace Application.Abstractions.Authentication
+﻿using Domain.Common.Enums;
+
+namespace Application.Abstractions.Authentication
 {
     public interface ITokenService
     {
@@ -9,7 +11,7 @@
         /// <param name="email">The email address associated with the user. Cannot be null or empty.</param>
         /// <returns>A string containing the generated access token. The token can be used to authenticate subsequent requests on
         /// behalf of the user.</returns>
-        string GenerateAccessToken(Guid userId, string email);
+        string GenerateAccessToken(Guid userId, string email, Source source);
 
         /// <summary>
         /// Generates a new refresh token for use in authentication workflows.

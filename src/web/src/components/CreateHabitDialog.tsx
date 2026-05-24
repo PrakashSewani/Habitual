@@ -259,7 +259,7 @@ const CreateHabitDialog = ({
                         description:
                             description.trim(),
                         isActive: true,
-                        createdFrom: 1,
+
                         schedule: {
                             type: typeNum,
                             interval:

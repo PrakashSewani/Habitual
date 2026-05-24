@@ -39,6 +39,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.UseWebSockets();
+
 app.MapSignalRHubs();
 
 app.Run();

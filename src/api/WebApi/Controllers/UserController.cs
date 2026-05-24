@@ -35,7 +35,7 @@ namespace Webapi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser([FromBody] AuthUser authUser)
         {
-            var resp = await _mediator.Send(new AuthUserRequest(authUser.Email, authUser.password));
+            var resp = await _mediator.Send(new AuthUserRequest(authUser.Email, authUser.password, authUser.Source));
             return Ok(ApiResponseFactory.Success(resp, "User logged in successfully"));
         }
 

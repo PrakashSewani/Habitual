@@ -13,7 +13,6 @@ namespace Application.Models.Habits.Create
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsActive { get; set; }
-        public HabitSource CreatedFrom { get; set; }
         public CreateHabitSchedule Schedule { get; set; }
     }
 }
