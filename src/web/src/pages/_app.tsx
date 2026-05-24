@@ -44,9 +44,9 @@ const App = ({
           <Box
             className={`${inter.variable}`}
             minH="100vh"
-            bg="white"
+            bg="#FAFAFF"
             _dark={{
-              bg: "#0F172A",
+              bg: "#0B0F1A",
             }}
             color="gray.900"
           >

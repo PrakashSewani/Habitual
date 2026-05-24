@@ -19,7 +19,6 @@ import {
     Input,
     Link,
     Skeleton,
-    SkeletonText,
     Spinner,
     Text,
     Tooltip,
@@ -29,9 +28,11 @@ import {
 import {
     LuArrowRight,
     LuChartNoAxesCombined,
+    LuCheck,
     LuChevronLeft,
     LuChevronRight,
     LuCircleCheckBig,
+    LuFlame,
     LuGlobe,
     LuPlus,
     LuRotateCcw,
@@ -61,21 +62,28 @@ import UserNavbar
 import CreateHabitDialog
     from "@/components/CreateHabitDialog";
 
-const Dashboard = () => {
+import {
+    computeLongestStreak,
+} from "@/lib/analytics";
 
-    // ========================================
-    // HELPERS
-    // ========================================
+const Dashboard = () => {
 
     const formatDate = (
         date: Date
-    ) =>
-        date.toISOString()
-            .split("T")[0];
+    ) => {
+        const y =
+            date.getFullYear();
 
-    // ========================================
-    // USER
-    // ========================================
+        const m = String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+        const d = String(
+            date.getDate()
+        ).padStart(2, "0");
+
+        return `${y}-${m}-${d}`;
+    };
 
     const {
         user,
@@ -83,16 +91,8 @@ const Dashboard = () => {
         logout,
     } = useAuthenticateUser();
 
-    // ========================================
-    // STATE
-    // ========================================
-
     const [currentTime, setCurrentTime] =
         useState(new Date());
-
-    // ========================================
-    // FILTERS
-    // ========================================
 
     const week = getWeekBounds();
 
@@ -128,17 +128,6 @@ const Dashboard = () => {
         setSearchOpen,
     ] = useState(false);
 
-    const [
-        habitTimeFilter,
-        setHabitTimeFilter,
-    ] = useState<
-        "all" | "week" | "month" | "year"
-    >("all");
-
-    // ========================================
-    // DATA
-    // ========================================
-
     const {
         habits,
         setHabits,
@@ -149,83 +138,6 @@ const Dashboard = () => {
             debouncedSearch ||
             undefined,
     });
-
-    // ========================================
-    // HABIT TIME FILTER
-    // ========================================
-
-    const filteredHabits =
-        useMemo(() => {
-
-            if (
-                habitTimeFilter === "all"
-            )
-                return habits;
-
-            const now = new Date();
-
-            return habits.filter(
-                h => {
-
-                    const created =
-                        new Date(
-                            h.createdAt
-                        );
-
-                    if (
-                        habitTimeFilter ===
-                        "week"
-                    ) {
-
-                        const weekAgo =
-                            new Date(
-                                now
-                            );
-
-                        weekAgo.setDate(
-                            now.getDate() - 7
-                        );
-
-                        return (
-                            created >= weekAgo
-                        );
-                    }
-
-                    if (
-                        habitTimeFilter ===
-                        "month"
-                    ) {
-
-                        return (
-                            created.getMonth() ===
-                            now.getMonth() &&
-                            created.getFullYear() ===
-                            now.getFullYear()
-                        );
-                    }
-
-                    if (
-                        habitTimeFilter ===
-                        "year"
-                    ) {
-
-                        return (
-                            created.getFullYear() ===
-                            now.getFullYear()
-                        );
-                    }
-
-                    return true;
-                }
-            );
-        }, [
-            habits,
-            habitTimeFilter,
-        ]);
-
-    // ========================================
-    // HABIT LOG
-    // ========================================
 
     const axiosRequest =
         useAxiosRequest();
@@ -242,17 +154,12 @@ const Dashboard = () => {
     ) => {
 
         setTogglingIds(prev => {
-
-            const next =
-                new Set(prev);
-
+            const next = new Set(prev);
             next.add(habitId);
-
             return next;
         });
 
         try {
-
             const response =
                 await axiosRequest.put(
                     `/HabitLog?habitId=${habitId}&date=${selectedDate}`
@@ -261,15 +168,9 @@ const Dashboard = () => {
             const completed =
                 response.data.data as boolean;
 
-            // ========================================
-            // OPTIMISTIC UPDATE
-            // ========================================
-
             setHabits(prev =>
                 prev.map(h => {
-
                     if (h.id !== habitId) {
-
                         return h;
                     }
 
@@ -284,7 +185,6 @@ const Dashboard = () => {
                     );
 
                     if (completed && idx < 0) {
-
                         logs.push({
                             id: `${habitId}-${selectedDate}`,
                             date: selectedDate,
@@ -294,7 +194,6 @@ const Dashboard = () => {
                         !completed &&
                         idx >= 0
                     ) {
-
                         logs.splice(idx, 1);
                     }
 
@@ -306,40 +205,27 @@ const Dashboard = () => {
             );
         }
         finally {
-
             setTogglingIds(prev => {
-
-                const next =
-                    new Set(prev);
-
+                const next = new Set(prev);
                 next.delete(habitId);
-
                 return next;
             });
         }
     };
 
-    // ========================================
-    // SIGNALR
-    // ========================================
-
     const { onHabitLogUpdated } =
         useSignalR();
 
     useEffect(() => {
-
         const unsubscribe =
             onHabitLogUpdated(
                 payload => {
-
                     setHabits(prev =>
                         prev.map(h => {
-
                             if (
                                 h.id !==
                                 payload.habitId
                             ) {
-
                                 return h;
                             }
 
@@ -357,7 +243,6 @@ const Dashboard = () => {
                                 payload.completed &&
                                 idx < 0
                             ) {
-
                                 logs.push({
                                     id: `${payload.habitId}-${payload.date}`,
                                     date: payload.date,
@@ -367,7 +252,6 @@ const Dashboard = () => {
                                 !payload.completed &&
                                 idx >= 0
                             ) {
-
                                 logs.splice(idx, 1);
                             }
 
@@ -381,15 +265,10 @@ const Dashboard = () => {
             );
 
         return unsubscribe;
-
     }, [
         onHabitLogUpdated,
         setHabits,
     ]);
-
-    // ========================================
-    // FILTER HELPERS
-    // ========================================
 
     const currentWeekBounds =
         getWeekBounds();
@@ -400,7 +279,6 @@ const Dashboard = () => {
         search !== "";
 
     const resetFilters = () => {
-
         setSearch("");
         setSelectedDate(todayString);
         const w = getWeekBounds();
@@ -408,12 +286,7 @@ const Dashboard = () => {
         setTo(w.to);
     };
 
-    // ========================================
-    // EFFECTS
-    // ========================================
-
     useEffect(() => {
-
         const timer =
             setInterval(() => {
                 setCurrentTime(
@@ -423,29 +296,20 @@ const Dashboard = () => {
 
         return () =>
             clearInterval(timer);
-
     }, []);
-
-    // ========================================
-    // HELPERS
-    // ========================================
 
     const getWeekBoundsForDate = (
         dateStr: string
     ) => {
-
         const date =
             new Date(dateStr);
-
         const day =
             date.getDay();
-
         const diffToMonday =
             (day + 6) % 7;
 
         const monday =
             new Date(date);
-
         monday.setDate(
             date.getDate() -
             diffToMonday
@@ -453,7 +317,6 @@ const Dashboard = () => {
 
         const sunday =
             new Date(monday);
-
         sunday.setDate(
             monday.getDate() + 6
         );
@@ -464,14 +327,11 @@ const Dashboard = () => {
             days: Array.from(
                 { length: 7 },
                 (_, i) => {
-
                     const d =
                         new Date(monday);
-
                     d.setDate(
                         monday.getDate() + i
                     );
-
                     return formatDate(d);
                 }
             ),
@@ -504,10 +364,8 @@ const Dashboard = () => {
     const getWeekDaysForRange =
         useCallback(
             (startDate: string) => {
-
                 const start =
                     new Date(startDate);
-
                 const days: string[] =
                     [];
 
@@ -516,14 +374,11 @@ const Dashboard = () => {
                     i < 7;
                     i++
                 ) {
-
                     const d =
                         new Date(start);
-
                     d.setDate(
                         start.getDate() + i
                     );
-
                     days.push(
                         formatDate(d)
                     );
@@ -548,7 +403,6 @@ const Dashboard = () => {
             () =>
                 analyticsWeekDays.map(
                     day => {
-
                         const completed =
                             habits.reduce(
                                 (
@@ -585,10 +439,8 @@ const Dashboard = () => {
     const shiftWeek = (
         direction: number
     ) => {
-
         const currentFrom =
             new Date(from);
-
         currentFrom.setDate(
             currentFrom.getDate() +
             direction * 7
@@ -596,7 +448,6 @@ const Dashboard = () => {
 
         const currentTo =
             new Date(currentFrom);
-
         currentTo.setDate(
             currentTo.getDate() + 6
         );
@@ -611,7 +462,6 @@ const Dashboard = () => {
     const scheduleTypeLabel = (
         type: number
     ) => {
-
         const labels:
             Record<number, string> =
         {
@@ -619,7 +469,6 @@ const Dashboard = () => {
             1: "Weekly",
             2: "Interval",
         };
-
         return labels[type] ??
             "Unknown";
     };
@@ -627,27 +476,22 @@ const Dashboard = () => {
     const scheduleTypeColor = (
         type: number
     ) => {
-
         switch (type) {
-
             case 0:
                 return {
                     bg: "rgba(99,102,241,0.12)",
                     color: "#6366F1",
                 };
-
             case 1:
                 return {
                     bg: "rgba(245,158,11,0.12)",
                     color: "#F59E0B",
                 };
-
             case 2:
                 return {
                     bg: "rgba(139,92,246,0.12)",
                     color: "#8B5CF6",
                 };
-
             default:
                 return {
                     bg: "rgba(148,163,184,0.12)",
@@ -656,45 +500,7 @@ const Dashboard = () => {
         }
     };
 
-    const statCards = [
-        {
-            title: "Habits",
-            value: totalHabits
-                .toString()
-                .padStart(2, "0"),
-            color: "#6366F1",
-            bg: "rgba(99,102,241,0.10)",
-        },
-        {
-            title: "Completed",
-            value: completedSelectedDate
-                .toString()
-                .padStart(2, "0"),
-            color: "#10B981",
-            bg: "rgba(16,185,129,0.10)",
-        },
-        {
-            title: "Pending",
-            value: pendingSelectedDate
-                .toString()
-                .padStart(2, "0"),
-            color: "#F59E0B",
-            bg: "rgba(245,158,11,0.10)",
-        },
-        {
-            title: "Completion",
-            value: `${completionRate}%`,
-            color: "#8B5CF6",
-            bg: "rgba(139,92,246,0.10)",
-        },
-    ];
-
-    // ========================================
-    // ANALYTICS HELPERS
-    // ========================================
-
     const computeConsistency = () => {
-
         const allDates =
             new Set<string>();
 
@@ -715,10 +521,6 @@ const Dashboard = () => {
             i < sorted.length;
             i++
         ) {
-
-            const date =
-                new Date(sorted[i]);
-
             const completed =
                 habits.filter(h =>
                     h.habitLogs.some(
@@ -735,7 +537,6 @@ const Dashboard = () => {
                     : 0;
 
             if (rate >= 1) {
-
                 current++;
                 maxStreak = Math.max(
                     maxStreak,
@@ -743,7 +544,6 @@ const Dashboard = () => {
                 );
             }
             else {
-
                 current = 0;
             }
         }
@@ -760,31 +560,20 @@ const Dashboard = () => {
     const consistency =
         computeConsistency();
 
-    const analytics = [
-        {
-            label: "Consistency",
-            value: `${consistency}%`,
-            color: "#10B981",
-        },
-        {
-            label: "Completion Rate",
-            value: `${completionRate}%`,
-            color: "#8B5CF6",
-        },
-    ];
+    const bestStreak = useMemo(() => {
+        if (habits.length === 0) return 0;
+        return Math.max(
+            0,
+            ...habits.map(h =>
+                computeLongestStreak(
+                    h.habitLogs
+                )
+            )
+        );
+    }, [habits]);
 
-    const getMonthlyDays = useCallback(
-        () => {
-
-            const now =
-                new Date();
-
-            const year =
-                now.getFullYear();
-
-            const month =
-                now.getMonth();
-
+    const getMonthDays = useCallback(
+        (year: number, month: number) => {
             const daysInMonth =
                 new Date(
                     year,
@@ -794,13 +583,11 @@ const Dashboard = () => {
 
             const firstDay =
                 new Date(year, month, 1);
-
             const firstDayOfWeek =
                 (firstDay.getDay() + 6) % 7;
 
             const leadingEmpty =
                 firstDayOfWeek;
-
             const trailingEmpty =
                 (7 -
                     ((leadingEmpty +
@@ -822,7 +609,6 @@ const Dashboard = () => {
                 i < leadingEmpty;
                 i++
             ) {
-
                 days.push(null);
             }
 
@@ -831,7 +617,6 @@ const Dashboard = () => {
                 d <= daysInMonth;
                 d++
             ) {
-
                 const dateStr =
                     `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
@@ -873,7 +658,6 @@ const Dashboard = () => {
                 i < trailingEmpty;
                 i++
             ) {
-
                 days.push(null);
             }
 
@@ -882,36 +666,38 @@ const Dashboard = () => {
         [habits, totalHabits]
     );
 
-    const monthlyDays =
-        useMemo(
-            () =>
-                getMonthlyDays(),
-            [getMonthlyDays]
-        );
+    const quarterMonths = useMemo(() => {
+        const now = new Date();
+        const months = [];
+        for (let i = 2; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            months.push({
+                label: d.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+                days: getMonthDays(d.getFullYear(), d.getMonth()),
+            });
+        }
+        return months;
+    }, [getMonthDays]);
 
     const dayColor = (rate: number) => {
-
         if (rate === 0)
             return {
                 bg: "rgba(148,163,184,0.10)",
                 _dark_bg:
                     "rgba(148,163,184,0.12)",
             };
-
         if (rate >= 80)
             return {
                 bg: "rgba(16,185,129,0.35)",
                 _dark_bg:
                     "rgba(16,185,129,0.45)",
             };
-
         if (rate >= 50)
             return {
                 bg: "rgba(99,102,241,0.35)",
                 _dark_bg:
                     "rgba(99,102,241,0.45)",
             };
-
         return {
             bg: "rgba(245,158,11,0.35)",
             _dark_bg:
@@ -919,27 +705,34 @@ const Dashboard = () => {
         };
     };
 
-    // ========================================
-    // USER LOADING
-    // ========================================
+    const weekDays =
+        getWeekBoundsForDate(selectedDate).days;
+
+    const weekDayLabels = [
+        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    ];
+
+    const goToToday = () => {
+        setSearch("");
+        setSelectedDate(todayString);
+        const w = getWeekBounds();
+        setFrom(w.from);
+        setTo(w.to);
+    };
 
     if (userLoading) {
-
         return (
             <Flex
                 minH="100dvh"
-                bg="#020617"
+                bg="#0B0F1A"
                 align="center"
                 justify="center"
             >
-
                 <VStack gap={6}>
-
                     <Spinner
                         size="xl"
                         color="#6366F1"
                     />
-
                     <Text
                         color="#F8FAFC"
                         fontSize="sm"
@@ -948,29 +741,21 @@ const Dashboard = () => {
                     >
                         Authenticating...
                     </Text>
-
                 </VStack>
-
             </Flex>
         );
     }
 
-    // ========================================
-    // MAIN
-    // ========================================
-
     return (
         <Box
-            h="100dvh"
-            overflow="hidden"
+            minH="100dvh"
             display="flex"
             flexDirection="column"
             bg="#FAFAFF"
             _dark={{
-                bg: "#020617",
+                bg: "#0B0F1A",
             }}
         >
-
             <UserNavbar
                 userName={user?.name}
                 currentTime={currentTime}
@@ -978,187 +763,443 @@ const Dashboard = () => {
             />
 
             <Box
-                flex="1"
-                overflow="hidden"
-                display="flex"
-                flexDirection="column"
-                maxW="1600px"
+                maxW="1400px"
                 mx="auto"
+                w="full"
                 px={{
-                    base: 6,
+                    base: 4,
+                    md: 8,
                     lg: 10,
                 }}
                 py={6}
+                pb={10}
             >
-
-                {/* HERO */}
-
+                {/* HEADER */}
                 <Flex
                     justify="space-between"
-                    align="flex-start"
+                    align="center"
                     flexWrap="wrap"
-                    gap={4}
-                    mb={10}
+                    gap={6}
+                    mb={8}
                 >
-
                     <VStack
                         align="start"
-                        gap={4}
-                        flex="1"
-                        minW="280px"
+                        gap={1}
                     >
-
                         <Heading
                             fontSize={{
-                                base: "4xl",
-                                lg: "6xl",
+                                base: "2xl",
+                                lg: "3xl",
                             }}
-                            letterSpacing="-0.06em"
+                            letterSpacing="-0.03em"
                             color="#0F172A"
                             _dark={{
                                 color: "#F8FAFC",
                             }}
+                            fontWeight="700"
                         >
                             Hello, {user?.name}
                         </Heading>
-
                         <Text
-                            fontSize="lg"
+                            fontSize="sm"
                             color="#64748B"
                             _dark={{
                                 color: "#94A3B8",
                             }}
                         >
-                            Consistency compounds
-                            into greatness.
+                            {currentTime.toLocaleDateString(
+                                undefined,
+                                {
+                                    weekday: "long",
+                                    month: "long",
+                                    day: "numeric",
+                                }
+                            )}
                         </Text>
-
-                        <HStack gap={4}>
-
-                            <Badge
-                                px={4}
-                                py={2}
-                                borderRadius="full"
-                                bg="
-                                    rgba(99,102,241,0.12)
-                                "
-                                color="#6366F1"
-                            >
-                                {currentTime.toLocaleDateString()}
-                            </Badge>
-
-                            <Badge
-                                px={4}
-                                py={2}
-                                borderRadius="full"
-                                bg="
-                                    rgba(16,185,129,0.12)
-                                "
-                                color="#10B981"
-                            >
-                                {currentTime.toLocaleTimeString()}
-                            </Badge>
-
-                        </HStack>
-
                     </VStack>
 
-                    {/* STAT INDICATORS */}
-
                     <HStack
-                        gap={3}
-                        flexWrap="wrap"
+                        gap={6}
                         align="center"
                     >
-
-                        {statCards.map(
-                            stat => (
-
-                                <Tooltip.Root
-                                    key={stat.title}
+                        {/* Progress Ring */}
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                                <HStack
+                                    gap={3}
+                                    align="center"
+                                    cursor="default"
                                 >
-
-                                    <Tooltip.Trigger
-                                        asChild
+                                    <Box
+                                        position="relative"
+                                        w="72px"
+                                        h="72px"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        flexShrink={0}
                                     >
-
-                                        <HStack
-                                            gap={2.5}
-                                            align="center"
-                                            px={3}
-                                            py={2}
-                                            borderRadius="full"
-                                            bg={stat.bg}
-                                            border="1px solid"
-                                            borderColor={stat.bg}
-                                            cursor="default"
-                                            transition="0.2s"
-                                            _hover={{
+                                        <svg
+                                            height="72"
+                                            width="72"
+                                            style={{
                                                 transform:
-                                                    "translateY(-2px)",
+                                                    "rotate(-90deg)",
                                             }}
                                         >
-
-                                            <Flex
-                                                w="32px"
-                                                h="32px"
-                                                borderRadius="full"
-                                                bg={stat.color}
-                                                color="white"
-                                                align="center"
-                                                justify="center"
-                                                fontSize="xs"
-                                                fontWeight="700"
-                                            >
-                                                {stat.value.replace(
-                                                    "%",
-                                                    ""
-                                                )}
-                                            </Flex>
-
+                                            <circle
+                                                stroke="rgba(148,163,184,0.15)"
+                                                fill="transparent"
+                                                strokeWidth="5"
+                                                r="30"
+                                                cx="36"
+                                                cy="36"
+                                            />
+                                            <circle
+                                                stroke={
+                                                    completionRate === 100
+                                                        ? "#10B981"
+                                                        : "#6366F1"
+                                                }
+                                                fill="transparent"
+                                                strokeWidth="5"
+                                                strokeDasharray={`${30 * 2 * Math.PI} ${30 * 2 * Math.PI}`}
+                                                strokeDashoffset={
+                                                    30 * 2 * Math.PI -
+                                                    (completionRate / 100) *
+                                                    (30 * 2 * Math.PI)
+                                                }
+                                                strokeLinecap="round"
+                                                style={{
+                                                    transition:
+                                                        "stroke-dashoffset 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
+                                                }}
+                                                r="30"
+                                                cx="36"
+                                                cy="36"
+                                            />
+                                        </svg>
+                                        <Box
+                                            position="absolute"
+                                            textAlign="center"
+                                        >
                                             <Text
-                                                fontSize="xs"
-                                                fontWeight="600"
+                                                fontSize="sm"
+                                                fontWeight="800"
+                                                color="#0F172A"
+                                                _dark={{
+                                                    color:
+                                                        "#F8FAFC",
+                                                }}
+                                                lineHeight="1"
+                                            >
+                                                {completionRate}
+                                                <Text
+                                                    as="span"
+                                                    fontSize="10px"
+                                                >
+                                                    %
+                                                </Text>
+                                            </Text>
+                                        </Box>
+                                    </Box>
+
+                                    <VStack
+                                        align="start"
+                                        gap={0}
+                                    >
+                                        <Text
+                                            fontSize="xs"
+                                            fontWeight="600"
+                                            color="#64748B"
+                                            _dark={{
+                                                color:
+                                                    "#94A3B8",
+                                            }}
+                                            textTransform="uppercase"
+                                            letterSpacing="0.06em"
+                                        >
+                                            Today
+                                        </Text>
+                                        <Text
+                                            fontSize="sm"
+                                            fontWeight="700"
+                                            color="#0F172A"
+                                            _dark={{
+                                                color:
+                                                    "#F8FAFC",
+                                            }}
+                                        >
+                                            {completedSelectedDate}
+                                            {" "}
+                                            <Text
+                                                as="span"
+                                                fontWeight="500"
                                                 color="#64748B"
                                                 _dark={{
                                                     color:
                                                         "#94A3B8",
                                                 }}
-                                                textTransform="uppercase"
-                                                letterSpacing="0.06em"
                                             >
-                                                {stat.title}
+                                                of{" "}
+                                                {totalHabits}
                                             </Text>
+                                        </Text>
+                                    </VStack>
+                                </HStack>
+                            </Tooltip.Trigger>
+                            <Tooltip.Positioner>
+                                <Tooltip.Content
+                                    bg="#111827"
+                                    color="white"
+                                    borderRadius="xl"
+                                    px={3}
+                                    py={1.5}
+                                    fontSize="xs"
+                                >
+                                    {completedSelectedDate} of{" "}
+                                    {totalHabits} habits completed today
+                                </Tooltip.Content>
+                            </Tooltip.Positioner>
+                        </Tooltip.Root>
 
-                                        </HStack>
-
-                                    </Tooltip.Trigger>
-
-                                    <Tooltip.Positioner>
-
-                                        <Tooltip.Content
-                                            bg="#111827"
-                                            color="white"
-                                            borderRadius="xl"
-                                            px={4}
-                                            py={2}
-                                            fontSize="sm"
+                        {/* Streak */}
+                        {bestStreak > 0 && (
+                            <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                    <HStack
+                                        gap={2}
+                                        px={3}
+                                        py={2}
+                                        borderRadius="full"
+                                        bg="rgba(245,158,11,0.10)"
+                                        _dark={{
+                                            bg:
+                                                "rgba(245,158,11,0.14)",
+                                        }}
+                                        cursor="default"
+                                    >
+                                        <Box
+                                            color="#F59E0B"
+                                            display="flex"
+                                            alignItems="center"
                                         >
-                                            {stat.title}: {stat.value}
-                                        </Tooltip.Content>
-
-                                    </Tooltip.Positioner>
-
-                                </Tooltip.Root>
-                            )
+                                            <LuFlame
+                                                size={16}
+                                            />
+                                        </Box>
+                                        <Text
+                                            fontSize="sm"
+                                            fontWeight="700"
+                                            color="#B45309"
+                                            _dark={{
+                                                color:
+                                                    "#FBBF24",
+                                            }}
+                                        >
+                                            {bestStreak}d
+                                        </Text>
+                                    </HStack>
+                                </Tooltip.Trigger>
+                                <Tooltip.Positioner>
+                                    <Tooltip.Content
+                                        bg="#111827"
+                                        color="white"
+                                        borderRadius="xl"
+                                        px={3}
+                                        py={1.5}
+                                        fontSize="xs"
+                                    >
+                                        Best streak: {bestStreak} days
+                                    </Tooltip.Content>
+                                </Tooltip.Positioner>
+                            </Tooltip.Root>
                         )}
-
                     </HStack>
-
                 </Flex>
 
-                {/* TOOLBAR */}
+                {/* WEEK STRIP */}
+                <Box mb={6}>
+                    <HStack
+                        gap={2}
+                        justify="center"
+                        flexWrap="wrap"
+                    >
+                        <IconButton
+                            aria-label="previous week"
+                            size="sm"
+                            variant="ghost"
+                            borderRadius="full"
+                            color="#64748B"
+                            _dark={{
+                                color:
+                                    "#94A3B8",
+                            }}
+                            _hover={{
+                                bg:
+                                    "rgba(99,102,241,0.08)",
+                                color:
+                                    "#6366F1",
+                            }}
+                            onClick={() =>
+                                shiftWeek(-1)
+                            }
+                        >
+                            <LuChevronLeft />
+                        </IconButton>
 
+                        {weekDays.map(
+                            (
+                                day,
+                                index
+                            ) => {
+                                const isSelected =
+                                    day ===
+                                    selectedDate;
+
+                                const isToday =
+                                    day ===
+                                    todayString;
+
+                                const dayDate =
+                                    new Date(day);
+
+                                const completion =
+                                    weeklyProgress[index];
+
+                                return (
+                                    <Tooltip.Root key={day}>
+                                        <Tooltip.Trigger asChild>
+                                            <VStack
+                                                gap={1.5}
+                                                align="center"
+                                                cursor="pointer"
+                                                onClick={() =>
+                                                    setSelectedDate(
+                                                        day
+                                                    )
+                                                }
+                                                p={2}
+                                                minW="52px"
+                                                borderRadius="xl"
+                                                transition="0.2s"
+                                                bg={
+                                                    isSelected
+                                                        ? "rgba(99,102,241,0.08)"
+                                                        : "transparent"
+                                                }
+                                                _hover={{
+                                                    bg:
+                                                        "rgba(99,102,241,0.06)",
+                                                }}
+                                                border="2px solid"
+                                                borderColor={
+                                                    isSelected
+                                                        ? "#6366F1"
+                                                        : "transparent"
+                                                }
+                                                _dark={{
+                                                    borderColor:
+                                                        isSelected
+                                                            ? "#818CF8"
+                                                            : "transparent",
+                                                }}
+                                            >
+                                                <Text
+                                                    fontSize="10px"
+                                                    fontWeight="600"
+                                                    textTransform="uppercase"
+                                                    color="#94A3B8"
+                                                    letterSpacing="0.06em"
+                                                >
+                                                    {
+                                                        weekDayLabels[index]
+                                                    }
+                                                </Text>
+
+                                                <Text
+                                                    fontSize="lg"
+                                                    fontWeight="700"
+                                                    color={
+                                                        isSelected
+                                                            ? "#6366F1"
+                                                            : isToday
+                                                                ? "#10B981"
+                                                                : "#0F172A"
+                                                    }
+                                                    _dark={{
+                                                        color:
+                                                            isSelected
+                                                                ? "#818CF8"
+                                                                : isToday
+                                                                    ? "#34D399"
+                                                                    : "#F8FAFC",
+                                                    }}
+                                                    lineHeight="1"
+                                                >
+                                                    {dayDate.getDate()}
+                                                </Text>
+
+                                                <Box
+                                                    w="6px"
+                                                    h="6px"
+                                                    borderRadius="full"
+                                                    bg={
+                                                        completion ===
+                                                            100
+                                                            ? "#10B981"
+                                                            : completion >
+                                                                0
+                                                                ? "#6366F1"
+                                                                : "transparent"
+                                                    }
+                                                    transition="0.2s"
+                                                />
+                                            </VStack>
+                                        </Tooltip.Trigger>
+                                        <Tooltip.Positioner>
+                                            <Tooltip.Content
+                                                bg="#111827"
+                                                color="white"
+                                                borderRadius="xl"
+                                                px={3}
+                                                py={1.5}
+                                                fontSize="xs"
+                                            >
+                                                {day}: {completion}% completed
+                                            </Tooltip.Content>
+                                        </Tooltip.Positioner>
+                                    </Tooltip.Root>
+                                );
+                            }
+                        )}
+
+                        <IconButton
+                            aria-label="next week"
+                            size="sm"
+                            variant="ghost"
+                            borderRadius="full"
+                            color="#64748B"
+                            _dark={{
+                                color:
+                                    "#94A3B8",
+                            }}
+                            _hover={{
+                                bg:
+                                    "rgba(99,102,241,0.08)",
+                                color:
+                                    "#6366F1",
+                            }}
+                            onClick={() =>
+                                shiftWeek(1)
+                            }
+                        >
+                            <LuChevronRight />
+                        </IconButton>
+                    </HStack>
+                </Box>
+
+                {/* TOOLBAR */}
                 <Flex
                     mb={4}
                     align="center"
@@ -1166,20 +1207,15 @@ const Dashboard = () => {
                     flexWrap="wrap"
                     gap={3}
                 >
-
                     <HStack
                         gap={3}
                         flexWrap="wrap"
                         align="center"
                     >
-
-                        {/* EXPANDABLE SEARCH */}
-
                         <HStack
                             gap={0}
                             align="center"
                         >
-
                             <IconButton
                                 aria-label="search"
                                 size="sm"
@@ -1187,11 +1223,14 @@ const Dashboard = () => {
                                 borderRadius="full"
                                 color="#64748B"
                                 _dark={{
-                                    color: "#94A3B8",
+                                    color:
+                                        "#94A3B8",
                                 }}
                                 _hover={{
-                                    bg: "rgba(99,102,241,0.08)",
-                                    color: "#6366F1",
+                                    bg:
+                                        "rgba(99,102,241,0.08)",
+                                    color:
+                                        "#6366F1",
                                 }}
                                 onClick={() =>
                                     setSearchOpen(
@@ -1204,10 +1243,10 @@ const Dashboard = () => {
 
                             <Box
                                 overflow="hidden"
-                                transition="all 0.3s ease"
+                                transition="all 0.3s cubic-bezier(0.25, 1, 0.5, 1)"
                                 w={
                                     searchOpen
-                                        ? "240px"
+                                        ? "220px"
                                         : "0px"
                                 }
                                 opacity={
@@ -1216,12 +1255,11 @@ const Dashboard = () => {
                                         : 0
                                 }
                             >
-
                                 <Input
                                     placeholder="Search habits..."
                                     size="sm"
                                     borderRadius="full"
-                                    w="240px"
+                                    w="220px"
                                     value={search}
                                     onChange={(
                                         e
@@ -1232,40 +1270,74 @@ const Dashboard = () => {
                                     }
                                     borderColor="rgba(148,163,184,0.24)"
                                     _dark={{
-                                        bg: "#111827",
-                                        borderColor: "rgba(148,163,184,0.22)",
-                                        color: "#F8FAFC",
-                                        _placeholder: {
-                                            color: "#94A3B8",
-                                        },
+                                        bg:
+                                            "#111827",
+                                        borderColor:
+                                            "rgba(148,163,184,0.22)",
+                                        color:
+                                            "#F8FAFC",
+                                        _placeholder:
+                                            {
+                                                color:
+                                                    "#94A3B8",
+                                            },
                                     }}
                                 />
-
                             </Box>
-
                         </HStack>
 
-                        {/* STATUS BADGE */}
-
                         {isCustomFilter ? (
-
-                            <Badge
-                                px={3}
-                                py={1}
-                                borderRadius="full"
-                                bg="rgba(245,158,11,0.15)"
-                                color="#F59E0B"
-                                _dark={{
-                                    bg: "rgba(245,158,11,0.22)",
-                                    color: "#FBBF24",
-                                }}
-                                fontSize="xs"
-                                fontWeight="600"
-                            >
-                                Custom Week
-                            </Badge>
+                            <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                    <HStack
+                                        gap={2}
+                                        px={3}
+                                        py={1}
+                                        borderRadius="full"
+                                        bg="rgba(245,158,11,0.12)"
+                                        border="1px solid"
+                                        borderColor="rgba(245,158,11,0.25)"
+                                        _dark={{
+                                            bg:
+                                                "rgba(245,158,11,0.16)",
+                                            borderColor:
+                                                "rgba(245,158,11,0.30)",
+                                        }}
+                                        cursor="default"
+                                    >
+                                        <Box
+                                            w="6px"
+                                            h="6px"
+                                            borderRadius="full"
+                                            bg="#F59E0B"
+                                        />
+                                        <Text
+                                            fontSize="xs"
+                                            fontWeight="600"
+                                            color="#B45309"
+                                            _dark={{
+                                                color:
+                                                    "#FBBF24",
+                                            }}
+                                        >
+                                            Custom Week
+                                        </Text>
+                                    </HStack>
+                                </Tooltip.Trigger>
+                                <Tooltip.Positioner>
+                                    <Tooltip.Content
+                                        bg="#111827"
+                                        color="white"
+                                        borderRadius="xl"
+                                        px={3}
+                                        py={1.5}
+                                        fontSize="xs"
+                                    >
+                                        You are viewing a filtered or past week
+                                    </Tooltip.Content>
+                                </Tooltip.Positioner>
+                            </Tooltip.Root>
                         ) : (
-
                             <Badge
                                 px={3}
                                 py={1}
@@ -1273,8 +1345,10 @@ const Dashboard = () => {
                                 bg="rgba(16,185,129,0.12)"
                                 color="#10B981"
                                 _dark={{
-                                    bg: "rgba(16,185,129,0.18)",
-                                    color: "#34D399",
+                                    bg:
+                                        "rgba(16,185,129,0.18)",
+                                    color:
+                                        "#34D399",
                                 }}
                                 fontSize="xs"
                                 fontWeight="600"
@@ -1282,124 +1356,108 @@ const Dashboard = () => {
                                 Current Week
                             </Badge>
                         )}
-
                     </HStack>
 
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        borderRadius="full"
-                        color="#64748B"
-                        _dark={{
-                            color: "#94A3B8",
-                        }}
-                        _hover={{
-                            bg: "rgba(99,102,241,0.08)",
-                            color: "#6366F1",
-                        }}
-                        onClick={
-                            resetFilters
-                        }
-                        disabled={
-                            !isCustomFilter
-                        }
-                        opacity={
-                            isCustomFilter
-                                ? 1
-                                : 0.4
-                        }
-                        _disabled={{
-                            cursor:
-                                "not-allowed",
-                        }}
-                    >
-                        <LuRotateCcw />
-                        Reset
-                    </Button>
+                    <HStack gap={3}>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            borderRadius="full"
+                            color="#64748B"
+                            _dark={{
+                                color: "#94A3B8",
+                            }}
+                            _hover={{
+                                bg:
+                                    "rgba(99,102,241,0.08)",
+                                color:
+                                    "#6366F1",
+                            }}
+                            onClick={
+                                resetFilters
+                            }
+                            disabled={
+                                !isCustomFilter
+                            }
+                            opacity={
+                                isCustomFilter
+                                    ? 1
+                                    : 0.4
+                            }
+                            _disabled={{
+                                cursor:
+                                    "not-allowed",
+                            }}
+                        >
+                            <LuRotateCcw />
+                            Reset
+                        </Button>
 
+                        <CreateHabitDialog
+                            onSuccess={
+                                refetch
+                            }
+                        />
+                    </HStack>
                 </Flex>
 
                 {/* MAIN CONTENT */}
-
                 <Grid
                     templateColumns={{
                         base: "1fr",
-                        lg: "7fr 5fr",
+                        lg: "7fr 4fr",
                     }}
                     gap={6}
-                    flex="1"
-                    overflow="hidden"
-                    alignItems="stretch"
+                    alignItems="start"
                 >
-
                     {/* LEFT: HABITS */}
-
                     <Box
-                        overflowY="auto"
                         pr={2}
                         pb={4}
-                        pt={4}
                     >
-
                         {/* LOADING */}
-
                         {habitsLoading && (
-                            <Grid
-                                templateColumns={{
-                                    base:
-                                        "repeat(2,1fr)",
-                                    lg:
-                                        "repeat(2,1fr)",
-                                    "2xl":
-                                        "repeat(3,1fr)",
-                                }}
-                                gap={5}
-                                mb={12}
+                            <VStack
+                                align="stretch"
+                                gap={3}
                             >
-
                                 {[1, 2, 3, 4]
-                                    .map(item => (
-                                        <Box
-                                            key={item}
-                                            p={5}
-                                            minH="180px"
-                                            borderRadius="3xl"
-                                            border="1px solid"
-                                            borderColor="
-                                                rgba(148,163,184,0.22)
-                                            "
-                                            bg="white"
-                                            _dark={{
-                                                bg:
-                                                    "#111827",
-                                            }}
-                                        >
-
+                                    .map(
+                                        item => (
                                             <Skeleton
-                                                h="22px"
-                                                mb={4}
+                                                key={item}
+                                                h="80px"
+                                                borderRadius="2xl"
                                             />
-
-                                            <SkeletonText
-                                                noOfLines={3}
-                                                mb={6}
-                                            />
-
-                                        </Box>
-                                    ))}
-
-                            </Grid>
+                                        )
+                                    )}
+                            </VStack>
                         )}
 
                         {/* EMPTY */}
-
                         {!habitsLoading &&
-                            filteredHabits.length === 0 && (
-
-                                <VStack py={24}>
-
+                            habits.length ===
+                                0 && (
+                                <VStack
+                                    py={20}
+                                    gap={4}
+                                >
+                                    <Box
+                                        w="64px"
+                                        h="64px"
+                                        borderRadius="full"
+                                        bg="rgba(99,102,241,0.08)"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        color="#6366F1"
+                                    >
+                                        <LuPlus
+                                            size={28}
+                                        />
+                                    </Box>
                                     <Heading
-                                        size="lg"
+                                        size="md"
                                         color="#0F172A"
                                         _dark={{
                                             color:
@@ -1408,1007 +1466,1010 @@ const Dashboard = () => {
                                     >
                                         No habits yet
                                     </Heading>
-
                                     <Text
                                         color="#64748B"
                                         _dark={{
                                             color:
                                                 "#94A3B8",
                                         }}
+                                        textAlign="center"
+                                        maxW="360px"
                                     >
-                                        Start building
-                                        consistency today.
+                                        Start with
+                                        one small
+                                        habit.
+                                        Consistency
+                                        compounds
+                                        into
+                                        greatness.
                                     </Text>
-
+                                    <CreateHabitDialog
+                                        onSuccess={
+                                            refetch
+                                        }
+                                    />
                                 </VStack>
                             )}
 
-                        {/* HABITS */}
-
+                        {/* HABITS LIST */}
                         {!habitsLoading &&
-                            filteredHabits.length > 0 && (
-
-                                <Grid
-                                    templateColumns={{
-                                        base:
-                                            "repeat(2,1fr)",
-                                        lg:
-                                            "repeat(2,1fr)",
-                                        "2xl":
-                                            "repeat(3,1fr)",
-                                    }}
-                                    gap={5}
-                                    mb={12}
+                            habits.length >
+                                0 && (
+                                <VStack
+                                    align="stretch"
+                                    gap={3}
                                 >
+                                    {habits.map(
+                                        habit => {
+                                            const isCompleted =
+                                                habit.habitLogs.some(
+                                                    l =>
+                                                        l.date ===
+                                                        selectedDate
+                                                );
 
-                            {filteredHabits.map(habit => {
+                                            const scheduleColors =
+                                                scheduleTypeColor(
+                                                    habit.schedule.type
+                                                );
 
-                                const isCompletedSelected =
-                                    habit.habitLogs.some(
-                                        l =>
-                                            l.date ===
-                                            selectedDate
-                                    );
+                                            const isToggling =
+                                                togglingIds.has(
+                                                    habit.id
+                                                );
 
-                                const scheduleColors =
-                                    scheduleTypeColor(
-                                        habit.schedule.type
-                                    );
-
-                                return (
-
-                                    <Tooltip.Root
-                                        key={habit.id}
-                                    >
-
-                                        <Tooltip.Trigger
-                                            asChild
-                                        >
-
-                                            <Box
-                                                position="relative"
-                                                p={5}
-                                                minH="180px"
-                                                borderRadius="3xl"
-                                                border="1px solid"
-                                                borderColor={
-                                                    isCompletedSelected
-                                                        ? "rgba(16,185,129,0.16)"
-                                                        : "rgba(148,163,184,0.22)"
-                                                }
-                                                bg={
-                                                    isCompletedSelected
-                                                        ? "rgba(16,185,129,0.08)"
-                                                        : "white"
-                                                }
-                                                boxShadow={
-                                                    isCompletedSelected
-                                                        ? "0 0 0 1px rgba(16,185,129,0.16)"
-                                                        : "none"
-                                                }
-                                                cursor={
-                                                    togglingIds.has(
-                                                        habit.id
-                                                    )
-                                                        ? "wait"
-                                                        : "pointer"
-                                                }
-                                                overflow="hidden"
-                                                transition="0.25s"
-                                                _hover={{
-                                                    transform:
-                                                        "translateY(-4px)",
-                                                }}
-                                                _dark={{
-                                                    bg:
-                                                        isCompletedSelected
-                                                            ? "rgba(16,185,129,0.08)"
-                                                            : "#111827",
-                                                }}
-                                                onClick={() => {
-                                                    if (
-                                                        !togglingIds.has(
-                                                            habit.id
-                                                        )
-                                                    ) {
-                                                        toggleHabitLog(
-                                                            habit.id
-                                                        );
-                                                    }
-                                                }}
-                                            >
-
+                                            return (
                                                 <Box
-                                                    position="absolute"
-                                                    top="-40px"
-                                                    right="-40px"
-                                                    w="120px"
-                                                    h="120px"
-                                                    bg={
-                                                        isCompletedSelected
-                                                            ? "#10B981"
-                                                            : "#6366F1"
+                                                    key={
+                                                        habit.id
                                                     }
-                                                    opacity="0.08"
-                                                    borderRadius="full"
-                                                    filter="blur(40px)"
-                                                />
-
-                                                <Flex
-                                                    direction="column"
-                                                    justify="space-between"
-                                                    h="full"
-                                                    pr={10}
+                                                    p={4}
+                                                    borderRadius="2xl"
+                                                    border="1px solid"
+                                                    borderColor={
+                                                        isCompleted
+                                                            ? "rgba(16,185,129,0.16)"
+                                                            : "rgba(148,163,184,0.14)"
+                                                    }
+                                                    bg={
+                                                        isCompleted
+                                                            ? "rgba(16,185,129,0.03)"
+                                                            : "white"
+                                                    }
+                                                    _dark={{
+                                                        bg:
+                                                            isCompleted
+                                                                ? "rgba(16,185,129,0.05)"
+                                                                : "#111827",
+                                                    }}
+                                                    transition="0.2s"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    gap={4}
+                                                    _hover={{
+                                                        borderColor:
+                                                            isCompleted
+                                                                ? "rgba(16,185,129,0.28)"
+                                                                : "rgba(99,102,241,0.20)",
+                                                    }}
                                                 >
+                                                    {/* TOGGLE */}
+                                                    <Tooltip.Root>
+                                                        <Tooltip.Trigger asChild>
+                                                            <Box
+                                                                as="button"
+                                                                aria-label={
+                                                                    isCompleted
+                                                                        ? "Mark incomplete"
+                                                                        : "Mark complete"
+                                                                }
+                                                                onClick={() =>
+                                                                    toggleHabitLog(
+                                                                        habit.id
+                                                                    )
+                                                                }
+                                                                opacity={
+                                                                    isToggling
+                                                                        ? 0.5
+                                                                        : 1
+                                                                }
+                                                                pointerEvents={
+                                                                    isToggling
+                                                                        ? "none"
+                                                                        : "auto"
+                                                                }
+                                                                w="40px"
+                                                                h="40px"
+                                                                borderRadius="full"
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                justifyContent="center"
+                                                                flexShrink={0}
+                                                                cursor="pointer"
+                                                                transition="0.2s"
+                                                                bg={
+                                                                    isCompleted
+                                                                        ? "#10B981"
+                                                                        : "rgba(148,163,184,0.12)"
+                                                                }
+                                                                color={
+                                                                    isCompleted
+                                                                        ? "white"
+                                                                        : "#94A3B8"
+                                                                }
+                                                                _hover={{
+                                                                    bg:
+                                                                        isCompleted
+                                                                            ? "#059669"
+                                                                            : "rgba(99,102,241,0.15)",
+                                                                    color:
+                                                                        isCompleted
+                                                                            ? "white"
+                                                                            : "#6366F1",
+                                                                    transform:
+                                                                        "scale(1.05)",
+                                                                }}
+                                                                _dark={{
+                                                                    bg:
+                                                                        isCompleted
+                                                                            ? "#10B981"
+                                                                            : "rgba(148,163,184,0.18)",
+                                                                    color:
+                                                                        isCompleted
+                                                                            ? "white"
+                                                                            : "#64748B",
+                                                                }}
+                                                            >
+                                                                {isCompleted ? (
+                                                                    <LuCheck
+                                                                        size={20}
+                                                                    />
+                                                                ) : (
+                                                                    <LuCircleCheckBig
+                                                                        size={20}
+                                                                    />
+                                                                )}
+                                                            </Box>
+                                                        </Tooltip.Trigger>
+                                                        <Tooltip.Positioner>
+                                                            <Tooltip.Content
+                                                                bg="#111827"
+                                                                color="white"
+                                                                borderRadius="xl"
+                                                                px={3}
+                                                                py={1.5}
+                                                                fontSize="xs"
+                                                            >
+                                                                {isCompleted
+                                                                    ? "Mark incomplete"
+                                                                    : "Mark complete"}
+                                                            </Tooltip.Content>
+                                                        </Tooltip.Positioner>
+                                                    </Tooltip.Root>
 
-                                                    <Box>
-
-                                                        <Heading
-                                                            size="sm"
-                                                            mb={3}
+                                                    {/* INFO */}
+                                                    <Box
+                                                        flex="1"
+                                                        minW={0}
+                                                    >
+                                                        <Text
+                                                            fontWeight="600"
                                                             color="#0F172A"
                                                             _dark={{
                                                                 color:
                                                                     "#F8FAFC",
                                                             }}
                                                             truncate
-                                                            title={habit.name}
-                                                        >
-                                                            {habit.name}
-                                                        </Heading>
-
-                                                        <Text
                                                             fontSize="sm"
-                                                            lineClamp={4}
+                                                            mb={0.5}
+                                                        >
+                                                            {
+                                                                habit.name
+                                                            }
+                                                        </Text>
+                                                        <Text
+                                                            fontSize="xs"
                                                             color="#64748B"
                                                             _dark={{
                                                                 color:
                                                                     "#94A3B8",
                                                             }}
+                                                            truncate
                                                         >
-                                                            {habit.description}
+                                                            {
+                                                                habit.description
+                                                            }
                                                         </Text>
-
                                                     </Box>
 
-                                                    <Flex
-                                                        align="center"
-                                                        justify="space-between"
+                                                    {/* META */}
+                                                    <HStack
+                                                        gap={2}
+                                                        flexShrink={0}
                                                     >
+                                                        <Tooltip.Root>
+                                                            <Tooltip.Trigger asChild>
+                                                                <Badge
+                                                                    px={2.5}
+                                                                    py={0.5}
+                                                                    borderRadius="full"
+                                                                    bg={
+                                                                        scheduleColors.bg
+                                                                    }
+                                                                    color={
+                                                                        scheduleColors.color
+                                                                    }
+                                                                    fontSize="10px"
+                                                                    fontWeight="600"
+                                                                    cursor="default"
+                                                                >
+                                                                    {scheduleTypeLabel(
+                                                                        habit.schedule.type
+                                                                    )}
+                                                                </Badge>
+                                                            </Tooltip.Trigger>
+                                                            <Tooltip.Positioner>
+                                                                <Tooltip.Content
+                                                                    bg="#111827"
+                                                                    color="white"
+                                                                    borderRadius="xl"
+                                                                    px={3}
+                                                                    py={1.5}
+                                                                    fontSize="xs"
+                                                                >
+                                                                    {scheduleTypeLabel(
+                                                                        habit.schedule.type
+                                                                    )} schedule
+                                                                </Tooltip.Content>
+                                                            </Tooltip.Positioner>
+                                                        </Tooltip.Root>
 
-                                                        <HStack gap={2}>
+                                                        <Tooltip.Root>
+                                                            <Tooltip.Trigger asChild>
+                                                                <Box
+                                                                    color="#94A3B8"
+                                                                    _dark={{
+                                                                        color:
+                                                                            "#64748B",
+                                                                    }}
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                    justifyContent="center"
+                                                                    cursor="default"
+                                                                >
+                                                                    {habit.createdFrom ===
+                                                                        2 ? (
+                                                                        <LuSmartphone
+                                                                            size={12}
+                                                                        />
+                                                                    ) : (
+                                                                        <LuGlobe
+                                                                            size={12}
+                                                                        />
+                                                                    )}
+                                                                </Box>
+                                                            </Tooltip.Trigger>
+                                                            <Tooltip.Positioner>
+                                                                <Tooltip.Content
+                                                                    bg="#111827"
+                                                                    color="white"
+                                                                    borderRadius="xl"
+                                                                    px={3}
+                                                                    py={1.5}
+                                                                    fontSize="xs"
+                                                                >
+                                                                    Created from{" "}
+                                                                    {habit.createdFrom === 2
+                                                                        ? "mobile"
+                                                                        : "web"}
+                                                                </Tooltip.Content>
+                                                            </Tooltip.Positioner>
+                                                        </Tooltip.Root>
+                                                    </HStack>
+                                                </Box>
+                                            );
+                                        }
+                                    )}
 
-                                                            <Badge
-                                                                px={3}
-                                                                py={1}
-                                                                borderRadius="full"
-                                                                bg={
-                                                                    scheduleColors.bg
-                                                                }
-                                                                color={
-                                                                    scheduleColors.color
-                                                                }
-                                                            >
-                                                                {scheduleTypeLabel(
-                                                                    habit.schedule.type
-                                                                )}
-                                                            </Badge>
-
-                                                            <Box
-                                                                color="#64748B"
-                                                                _dark={{
-                                                                    color: "#94A3B8",
-                                                                }}
-                                                                display="flex"
-                                                                alignItems="center"
-                                                                justifyContent="center"
-                                                                title={
-                                                                    habit.createdFrom === 2
-                                                                        ? "Mobile"
-                                                                        : "Web"
-                                                                }
-                                                            >
-                                                                {habit.createdFrom === 2
-                                                                    ? <LuSmartphone size={13} />
-                                                                    : <LuGlobe size={13} />}
-                                                            </Box>
-
-                                                        </HStack>
-
-                                                        <Badge
-                                                            px={3}
-                                                            py={1}
-                                                            borderRadius="full"
-                                                            bg={
-                                                                isCompletedSelected
-                                                                    ? "rgba(16,185,129,0.12)"
-                                                                    : "rgba(245,158,11,0.12)"
-                                                            }
-                                                            color={
-                                                                isCompletedSelected
-                                                                    ? "#10B981"
-                                                                    : "#F59E0B"
-                                                            }
-                                                        >
-                                                            {isCompletedSelected
-                                                                ? "Completed"
-                                                                : "Pending"}
-                                                        </Badge>
-
-                                                    </Flex>
-
-                                                </Flex>
-
-                                                <IconButton
-                                                    aria-label="complete"
-                                                    size="sm"
-                                                    position="absolute"
-                                                    top={4}
-                                                    right={4}
-                                                    borderRadius="full"
-                                                    bg={
-                                                        isCompletedSelected
-                                                            ? "#10B981"
-                                                            : "rgba(245,158,11,0.12)"
-                                                    }
-                                                    color={
-                                                        isCompletedSelected
-                                                            ? "white"
-                                                            : "#F59E0B"
-                                                    }
-                                                    loading={
-                                                        togglingIds.has(
-                                                            habit.id
-                                                        )
-                                                    }
-                                                    pointerEvents="none"
-                                                >
-                                                    <LuCircleCheckBig />
-                                                </IconButton>
-
-                                            </Box>
-
-                                        </Tooltip.Trigger>
-
-                                        <Tooltip.Positioner>
-
-                                            <Tooltip.Content
-                                                bg="#111827"
-                                                color="white"
-                                                borderRadius="xl"
-                                                px={4}
-                                                py={2}
-                                                fontSize="sm"
-                                            >
-                                                Mark habit as
-                                                complete
-                                            </Tooltip.Content>
-
-                                        </Tooltip.Positioner>
-
-                                    </Tooltip.Root>
-                                );
-                            })}
-
-                            {/* CREATE HABIT CARD */}
-
-                            <CreateHabitDialog
-                                onSuccess={refetch}
-                                trigger={(
-
-                                    <Box
-                                        position="relative"
-                                        p={5}
-                                        minH="180px"
-                                        borderRadius="3xl"
-                                        border="1px dashed"
-                                        borderColor="rgba(99,102,241,0.30)"
-                                        bg="transparent"
-                                        cursor="pointer"
-                                        overflow="hidden"
-                                        transition="0.25s"
-                                        display="flex"
-                                        alignItems="center"
-                                        justifyContent="center"
-                                        _hover={{
-                                            bg: "rgba(99,102,241,0.04)",
-                                            borderColor:
-                                                "#6366F1",
-                                            transform:
-                                                "translateY(-4px)",
-                                        }}
-                                        _dark={{
-                                            borderColor:
-                                                "rgba(99,102,241,0.35)",
-                                            _hover: {
-                                                bg: "rgba(99,102,241,0.06)",
-                                            },
-                                        }}
-                                    >
-
-                                        <VStack
-                                            gap={3}
-                                            align="center"
-                                        >
-
+                                    {/* CREATE TRIGGER */}
+                                    <CreateHabitDialog
+                                        onSuccess={
+                                            refetch
+                                        }
+                                        trigger={(
                                             <Box
-                                                w="48px"
-                                                h="48px"
-                                                borderRadius="full"
-                                                bg="rgba(99,102,241,0.10)"
+                                                as="button"
+                                                w="full"
+                                                p={4}
+                                                borderRadius="2xl"
+                                                border="1px dashed"
+                                                borderColor="rgba(99,102,241,0.25)"
                                                 display="flex"
                                                 alignItems="center"
                                                 justifyContent="center"
+                                                gap={2}
                                                 color="#6366F1"
+                                                cursor="pointer"
+                                                transition="0.2s"
+                                                _hover={{
+                                                    bg:
+                                                        "rgba(99,102,241,0.04)",
+                                                    borderColor:
+                                                        "#6366F1",
+                                                }}
+                                                _dark={{
+                                                    borderColor:
+                                                        "rgba(99,102,241,0.35)",
+                                                    _hover:
+                                                        {
+                                                            bg:
+                                                                "rgba(99,102,241,0.06)",
+                                                        },
+                                                }}
                                             >
                                                 <LuPlus
-                                                    size={24}
+                                                    size={18}
                                                 />
+                                                <Text
+                                                    fontSize="sm"
+                                                    fontWeight="600"
+                                                >
+                                                    Create New
+                                                    Habit
+                                                </Text>
                                             </Box>
-
-                                            <Text
-                                                fontSize="sm"
-                                                fontWeight="600"
-                                                color="#6366F1"
-                                            >
-                                                Create Habit
-                                            </Text>
-
-                                        </VStack>
-
-                                    </Box>
-                                )}
-                            />
-
-                        </Grid>
-                    )}
-
+                                        )}
+                                    />
+                                </VStack>
+                            )}
                     </Box>
 
                     {/* RIGHT: ANALYTICS */}
-
                     <Box
-                        overflowY="auto"
                         pr={2}
                         pb={4}
                     >
-
                         <Box
-                            p={7}
+                            p={6}
                             borderRadius="3xl"
                             border="1px solid"
-                            borderColor="rgba(148,163,184,0.22)"
+                            borderColor="rgba(148,163,184,0.16)"
                             bg="white"
                             _dark={{
-                                bg: "#111827",
+                                bg:
+                                    "#111827",
                             }}
                         >
-
-                    {/* HEADER + TOGGLE */}
-
-                    <Flex
-                        justify="space-between"
-                        align="center"
-                        mb={8}
-                        flexWrap="wrap"
-                        gap={4}
-                    >
-
-                        <Heading
-                            size="md"
-                            color="#0F172A"
-                            _dark={{
-                                color:
-                                    "#F8FAFC",
-                            }}
-                        >
-                            Analytics Overview
-                        </Heading>
-
-                        <HStack gap={1}>
-
-                            <Button
-                                size="sm"
-                                borderRadius="full"
-                                px={4}
-                                py={1.5}
-                                fontSize="sm"
-                                fontWeight="600"
-                                bg={
-                                    analyticsView ===
-                                    "weekly"
-                                        ? "#6366F1"
-                                        : "transparent"
-                                }
-                                color={
-                                    analyticsView ===
-                                    "weekly"
-                                        ? "white"
-                                        : "#64748B"
-                                }
-                                _dark={{
-                                    color:
-                                        analyticsView ===
-                                            "weekly"
-                                            ? "white"
-                                            : "#94A3B8",
-                                }}
-                                border="1px solid"
-                                borderColor={
-                                    analyticsView ===
-                                    "weekly"
-                                        ? "#6366F1"
-                                        : "rgba(148,163,184,0.24)"
-                                }
-                                _hover={{
-                                    borderColor:
-                                        "#6366F1",
-                                }}
-                                transition="0.2s"
-                                onClick={() =>
-                                    setAnalyticsView(
-                                        "weekly"
-                                    )
-                                }
-                            >
-                                Weekly
-                            </Button>
-
-                            <Button
-                                size="sm"
-                                borderRadius="full"
-                                px={4}
-                                py={1.5}
-                                fontSize="sm"
-                                fontWeight="600"
-                                bg={
-                                    analyticsView ===
-                                    "monthly"
-                                        ? "#6366F1"
-                                        : "transparent"
-                                }
-                                color={
-                                    analyticsView ===
-                                    "monthly"
-                                        ? "white"
-                                        : "#64748B"
-                                }
-                                _dark={{
-                                    color:
-                                        analyticsView ===
-                                            "monthly"
-                                            ? "white"
-                                            : "#94A3B8",
-                                }}
-                                border="1px solid"
-                                borderColor={
-                                    analyticsView ===
-                                    "monthly"
-                                        ? "#6366F1"
-                                        : "rgba(148,163,184,0.24)"
-                                }
-                                _hover={{
-                                    borderColor:
-                                        "#6366F1",
-                                }}
-                                transition="0.2s"
-                                onClick={() =>
-                                    setAnalyticsView(
-                                        "monthly"
-                                    )
-                                }
-                            >
-                                Monthly
-                            </Button>
-
-                        </HStack>
-
-                    </Flex>
-
-                    {/* WEEKLY VIEW */}
-
-                    {analyticsView ===
-                        "weekly" && (
-
-                            <VStack
-                                align="stretch"
+                            {/* HEADER + TOGGLE */}
+                            <Flex
+                                justify="space-between"
+                                align="center"
+                                mb={6}
+                                flexWrap="wrap"
                                 gap={4}
-                                mb={8}
                             >
-
-                                <Flex
-                                    align="center"
-                                    justify="space-between"
+                                <Heading
+                                    size="sm"
+                                    color="#0F172A"
+                                    _dark={{
+                                        color:
+                                            "#F8FAFC",
+                                    }}
                                 >
-
-                                    <IconButton
-                                        aria-label="previous week"
-                                        size="sm"
-                                        variant="ghost"
-                                        borderRadius="full"
-                                        onClick={() =>
-                                            shiftWeek(
-                                                -1
-                                            )
-                                        }
-                                    >
-                                        <LuChevronLeft />
-                                    </IconButton>
-
-                                    <VStack
-                                        gap={1}
-                                        align="center"
-                                    >
-
-                                        <HStack gap={2}>
-
-                                            <Text
-                                                fontSize="sm"
-                                                fontWeight="600"
-                                                color="#0F172A"
-                                                _dark={{
-                                                    color:
-                                                        "#F8FAFC",
-                                                }}
-                                            >
-                                                {from} — {to}
-                                            </Text>
-
-                                            {selectedDate === todayString && (
-
-                                                <Badge
-                                                    px={2}
-                                                    py={0.5}
-                                                    borderRadius="full"
-                                                    bg="rgba(16,185,129,0.15)"
-                                                    color="#10B981"
-                                                    _dark={{
-                                                        bg: "rgba(16,185,129,0.20)",
-                                                        color: "#34D399",
-                                                    }}
-                                                    fontSize="10px"
-                                                    fontWeight="700"
-                                                >
-                                                    TODAY
-                                                </Badge>
-                                            )}
-
-                                        </HStack>
-
-                                        <Text
-                                            fontSize="xs"
-                                            color="#64748B"
-                                            _dark={{
-                                                color:
-                                                    "#94A3B8",
-                                            }}
-                                        >
-                                            {new Date(selectedDate).toLocaleDateString("en-US", {
-                                                weekday: "long",
-                                                month: "short",
-                                                day: "numeric",
-                                            })}
-                                        </Text>
-
-                                    </VStack>
-
-                                    <IconButton
-                                        aria-label="next week"
-                                        size="sm"
-                                        variant="ghost"
-                                        borderRadius="full"
-                                        onClick={() =>
-                                            shiftWeek(
-                                                1
-                                            )
-                                        }
-                                    >
-                                        <LuChevronRight />
-                                    </IconButton>
-
-                                </Flex>
+                                    Analytics
+                                </Heading>
 
                                 <HStack
-                                    align="end"
-                                    h="200px"
-                                    gap={3}
-                                    px={2}
+                                    gap={1}
+                                    p={0.5}
+                                    borderRadius="full"
+                                    bg="rgba(148,163,184,0.08)"
+                                    _dark={{
+                                        bg:
+                                            "rgba(148,163,184,0.10)",
+                                    }}
                                 >
+                                    <Button
+                                        size="xs"
+                                        borderRadius="full"
+                                        px={3}
+                                        py={1}
+                                        fontSize="xs"
+                                        fontWeight="600"
+                                        bg={
+                                            analyticsView ===
+                                                "weekly"
+                                                ? "white"
+                                                : "transparent"
+                                        }
+                                        color={
+                                            analyticsView ===
+                                                "weekly"
+                                                ? "#0F172A"
+                                                : "#64748B"
+                                        }
+                                        _dark={{
+                                            bg:
+                                                analyticsView ===
+                                                    "weekly"
+                                                    ? "#1F2937"
+                                                    : "transparent",
+                                            color:
+                                                analyticsView ===
+                                                    "weekly"
+                                                    ? "#F8FAFC"
+                                                    : "#94A3B8",
+                                        }}
+                                        boxShadow={
+                                            analyticsView ===
+                                                "weekly"
+                                                ? "0 1px 3px rgba(0,0,0,0.08)"
+                                                : "none"
+                                        }
+                                        transition="0.2s"
+                                        onClick={() =>
+                                            setAnalyticsView(
+                                                "weekly"
+                                            )
+                                        }
+                                    >
+                                        Weekly
+                                    </Button>
 
-                                    {weeklyProgress.map(
-                                        (
-                                            height,
-                                            index
-                                        ) => {
+                                    <Button
+                                        size="xs"
+                                        borderRadius="full"
+                                        px={3}
+                                        py={1}
+                                        fontSize="xs"
+                                        fontWeight="600"
+                                        bg={
+                                            analyticsView ===
+                                                "monthly"
+                                                ? "white"
+                                                : "transparent"
+                                        }
+                                        color={
+                                            analyticsView ===
+                                                "monthly"
+                                                ? "#0F172A"
+                                                : "#64748B"
+                                        }
+                                        _dark={{
+                                            bg:
+                                                analyticsView ===
+                                                    "monthly"
+                                                    ? "#1F2937"
+                                                    : "transparent",
+                                            color:
+                                                analyticsView ===
+                                                    "monthly"
+                                                    ? "#F8FAFC"
+                                                    : "#94A3B8",
+                                        }}
+                                        boxShadow={
+                                            analyticsView ===
+                                                "monthly"
+                                                ? "0 1px 3px rgba(0,0,0,0.08)"
+                                                : "none"
+                                        }
+                                        transition="0.2s"
+                                        onClick={() =>
+                                            setAnalyticsView(
+                                                "monthly"
+                                            )
+                                        }
+                                    >
+                                        Monthly
+                                    </Button>
+                                </HStack>
+                            </Flex>
 
-                                            const isSelected =
-                                                analyticsWeekDays[index] === selectedDate;
+                            {/* WEEKLY VIEW */}
+                            {analyticsView ===
+                                "weekly" && (
+                                <VStack
+                                    align="stretch"
+                                    gap={4}
+                                    mb={6}
+                                >
+                                    <Flex
+                                        align="center"
+                                        justify="space-between"
+                                    >
+                                        <IconButton
+                                            aria-label="previous week"
+                                            size="sm"
+                                            variant="ghost"
+                                            borderRadius="full"
+                                            onClick={() =>
+                                                shiftWeek(
+                                                    -1
+                                                )
+                                            }
+                                        >
+                                            <LuChevronLeft />
+                                        </IconButton>
 
-                                            const isTodayBar =
-                                                analyticsWeekDays[index] === todayString;
-
-                                            const barGradient =
-                                                height >= 80
-                                                    ? "linear-gradient(180deg, #34D399 0%, #10B981 100%)"
-                                                    : height >= 50
-                                                        ? "linear-gradient(180deg, #818CF8 0%, #6366F1 100%)"
-                                                        : "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)";
-
-                                            return (
-
-                                                <Tooltip.Root
-                                                    key={index}
+                                        <VStack
+                                            gap={0.5}
+                                            align="center"
+                                        >
+                                            <HStack gap={2}>
+                                                <Text
+                                                    fontSize="sm"
+                                                    fontWeight="600"
+                                                    color="#0F172A"
+                                                    _dark={{
+                                                        color:
+                                                            "#F8FAFC",
+                                                    }}
                                                 >
+                                                    {from}{" "}
+                                                    —{" "}
+                                                    {to}
+                                                </Text>
 
-                                                    <Tooltip.Trigger
-                                                        asChild
+                                                {selectedDate ===
+                                                    todayString && (
+                                                    <Badge
+                                                        px={2}
+                                                        py={0.5}
+                                                        borderRadius="full"
+                                                        bg="rgba(16,185,129,0.15)"
+                                                        color="#10B981"
+                                                        _dark={{
+                                                            bg:
+                                                                "rgba(16,185,129,0.20)",
+                                                            color:
+                                                                "#34D399",
+                                                        }}
+                                                        fontSize="10px"
+                                                        fontWeight="700"
+                                                        cursor="pointer"
+                                                        onClick={goToToday}
+                                                        title="Go to today"
                                                     >
+                                                        TODAY
+                                                    </Badge>
+                                                )}
+                                            </HStack>
 
-                                                        <VStack
-                                                            gap={2}
-                                                            flex="1"
-                                                            align="center"
-                                                            justify="flex-end"
-                                                            cursor="pointer"
-                                                            onClick={() =>
-                                                                setSelectedDate(
-                                                                    analyticsWeekDays[index]
-                                                                )
-                                                            }
+                                            <Text
+                                                fontSize="xs"
+                                                color="#64748B"
+                                                _dark={{
+                                                    color:
+                                                        "#94A3B8",
+                                                }}
+                                            >
+                                                {new Date(
+                                                    selectedDate
+                                                ).toLocaleDateString(
+                                                    "en-US",
+                                                    {
+                                                        weekday:
+                                                            "long",
+                                                        month:
+                                                            "short",
+                                                        day:
+                                                            "numeric",
+                                                    }
+                                                )}
+                                            </Text>
+                                        </VStack>
+
+                                        <IconButton
+                                            aria-label="next week"
+                                            size="sm"
+                                            variant="ghost"
+                                            borderRadius="full"
+                                            onClick={() =>
+                                                shiftWeek(
+                                                    1
+                                                )
+                                            }
+                                        >
+                                            <LuChevronRight />
+                                        </IconButton>
+                                    </Flex>
+
+                                    <HStack
+                                        align="end"
+                                        h="160px"
+                                        gap={3}
+                                        px={2}
+                                    >
+                                        {weeklyProgress.map(
+                                            (
+                                                height,
+                                                index
+                                            ) => {
+                                                const isSelected =
+                                                    analyticsWeekDays[index] ===
+                                                    selectedDate;
+
+                                                const isTodayBar =
+                                                    analyticsWeekDays[index] ===
+                                                    todayString;
+
+                                                const barColor =
+                                                    height >= 80
+                                                        ? "#10B981"
+                                                        : height >= 50
+                                                            ? "#6366F1"
+                                                            : "#F59E0B";
+
+                                                return (
+                                                    <Tooltip.Root
+                                                        key={index}
+                                                    >
+                                                        <Tooltip.Trigger
+                                                            asChild
                                                         >
-
-                                                            <Text
-                                                                fontSize="10px"
-                                                                fontWeight="700"
-                                                                color={
-                                                                    isSelected
-                                                                        ? "#6366F1"
-                                                                        : "#64748B"
+                                                            <VStack
+                                                                gap={2}
+                                                                flex="1"
+                                                                align="center"
+                                                                justify="flex-end"
+                                                                cursor="pointer"
+                                                                onClick={() =>
+                                                                    setSelectedDate(
+                                                                        analyticsWeekDays[index]
+                                                                    )
                                                                 }
-                                                                _dark={{
-                                                                    color:
-                                                                        isSelected
-                                                                            ? "#818CF8"
-                                                                            : "#94A3B8",
-                                                                }}
-                                                                transition="0.2s"
                                                             >
-                                                                {height}%
-                                                            </Text>
-
-                                                            <Box
-                                                                w="100%"
-                                                                maxW="40px"
-                                                                h={`${Math.max(height, 6)}%`}
-                                                                minH="4px"
-                                                                borderRadius="xl"
-                                                                bg={barGradient}
-                                                                opacity={
-                                                                    height > 0
-                                                                        ? 1
-                                                                        : 0.3
-                                                                }
-                                                                transition="0.4s cubic-bezier(0.4, 0, 0.2, 1)"
-                                                                position="relative"
-                                                                overflow="hidden"
-                                                                boxShadow={
-                                                                    isSelected
-                                                                        ? "0 0 12px rgba(99,102,241,0.35)"
-                                                                        : "none"
-                                                                }
-                                                                border={
-                                                                    isSelected
-                                                                        ? "2px solid"
-                                                                        : "none"
-                                                                }
-                                                                borderColor={
-                                                                    isSelected
-                                                                        ? "#6366F1"
-                                                                        : "transparent"
-                                                                }
-                                                                _dark={{
-                                                                    borderColor:
-                                                                        isSelected
-                                                                            ? "#818CF8"
-                                                                            : "transparent",
-                                                                }}
-                                                            >
-
-                                                                <Box
-                                                                    position="absolute"
-                                                                    top="0"
-                                                                    left="0"
-                                                                    right="0"
-                                                                    h="35%"
-                                                                    bg="linear-gradient(180deg, rgba(255,255,255,0.25), transparent)"
-                                                                    borderRadius="xl"
-                                                                />
-
-                                                            </Box>
-
-                                                            <HStack gap={1} align="center">
-
-                                                                {isTodayBar && (
-
-                                                                    <Box
-                                                                        w="5px"
-                                                                        h="5px"
-                                                                        borderRadius="full"
-                                                                        bg="#10B981"
-                                                                        boxShadow="0 0 6px rgba(16,185,129,0.6)"
-                                                                    />
-                                                                )}
-
                                                                 <Text
-                                                                    fontSize="9px"
-                                                                    fontWeight="600"
+                                                                    fontSize="10px"
+                                                                    fontWeight="700"
                                                                     color={
                                                                         isSelected
                                                                             ? "#6366F1"
-                                                                            : isTodayBar
-                                                                                ? "#10B981"
-                                                                                : "#94A3B8"
+                                                                            : "#64748B"
                                                                     }
                                                                     _dark={{
                                                                         color:
                                                                             isSelected
                                                                                 ? "#818CF8"
-                                                                                : isTodayBar
-                                                                                    ? "#34D399"
-                                                                                    : "#64748B",
+                                                                                : "#94A3B8",
                                                                     }}
-                                                                    textTransform="uppercase"
-                                                                    letterSpacing="0.06em"
                                                                     transition="0.2s"
                                                                 >
                                                                     {
-                                                                        [
-                                                                            "M",
-                                                                            "T",
-                                                                            "W",
-                                                                            "T",
-                                                                            "F",
-                                                                            "S",
-                                                                            "S",
-                                                                        ][index]
+                                                                        height
                                                                     }
+                                                                    %
                                                                 </Text>
 
-                                                            </HStack>
+                                                                <Box
+                                                                    w="100%"
+                                                                    maxW="36px"
+                                                                    h={`${Math.max(
+                                                                        height,
+                                                                        4
+                                                                    )}%`}
+                                                                    minH="4px"
+                                                                    borderRadius="xl"
+                                                                    bg={
+                                                                        barColor
+                                                                    }
+                                                                    opacity={
+                                                                        height > 0
+                                                                            ? 1
+                                                                            : 0.25
+                                                                    }
+                                                                    transition="0.4s cubic-bezier(0.25, 1, 0.5, 1)"
+                                                                    position="relative"
+                                                                    overflow="hidden"
+                                                                    boxShadow={
+                                                                        isSelected
+                                                                            ? `0 0 10px ${barColor}44`
+                                                                            : "none"
+                                                                    }
+                                                                    border={
+                                                                        isSelected
+                                                                            ? "2px solid"
+                                                                            : "none"
+                                                                    }
+                                                                    borderColor={
+                                                                        isSelected
+                                                                            ? barColor
+                                                                            : "transparent"
+                                                                    }
+                                                                >
+                                                                    <Box
+                                                                        position="absolute"
+                                                                        top="0"
+                                                                        left="0"
+                                                                        right="0"
+                                                                        h="35%"
+                                                                        bg="linear-gradient(180deg, rgba(255,255,255,0.20), transparent)"
+                                                                        borderRadius="xl"
+                                                                    />
+                                                                </Box>
 
-                                                        </VStack>
+                                                                <HStack
+                                                                    gap={1}
+                                                                    align="center"
+                                                                >
+                                                                    {isTodayBar && (
+                                                                        <Box
+                                                                            w="5px"
+                                                                            h="5px"
+                                                                            borderRadius="full"
+                                                                            bg="#10B981"
+                                                                        />
+                                                                    )}
 
-                                                    </Tooltip.Trigger>
+                                                                    <Text
+                                                                        fontSize="9px"
+                                                                        fontWeight="600"
+                                                                        color={
+                                                                            isSelected
+                                                                                ? "#6366F1"
+                                                                                : isTodayBar
+                                                                                    ? "#10B981"
+                                                                                    : "#94A3B8"
+                                                                        }
+                                                                        _dark={{
+                                                                            color:
+                                                                                isSelected
+                                                                                    ? "#818CF8"
+                                                                                    : isTodayBar
+                                                                                        ? "#34D399"
+                                                                                        : "#64748B",
+                                                                        }}
+                                                                        textTransform="uppercase"
+                                                                        letterSpacing="0.06em"
+                                                                        transition="0.2s"
+                                                                    >
+                                                                        {
+                                                                            [
+                                                                                "M",
+                                                                                "T",
+                                                                                "W",
+                                                                                "T",
+                                                                                "F",
+                                                                                "S",
+                                                                                "S",
+                                                                            ][index]
+                                                                        }
+                                                                    </Text>
+                                                                </HStack>
+                                                            </VStack>
+                                                        </Tooltip.Trigger>
 
-                                                    <Tooltip.Positioner>
+                                                        <Tooltip.Positioner>
+                                                            <Tooltip.Content
+                                                                bg="#111827"
+                                                                color="white"
+                                                                borderRadius="xl"
+                                                                px={3}
+                                                                py={1.5}
+                                                                fontSize="xs"
+                                                            >
+                                                                {
+                                                                    analyticsWeekDays[index]
+                                                                }
+                                                                :{" "}
+                                                                {
+                                                                    height
+                                                                }
+                                                                %
+                                                            </Tooltip.Content>
+                                                        </Tooltip.Positioner>
+                                                    </Tooltip.Root>
+                                                );
+                                            }
+                                        )}
+                                    </HStack>
+                                </VStack>
+                            )}
 
-                                                        <Tooltip.Content
-                                                            bg="#111827"
-                                                            color="white"
-                                                            borderRadius="xl"
-                                                            px={3}
-                                                            py={1.5}
-                                                            fontSize="xs"
-                                                        >
-                                                            {
-                                                                analyticsWeekDays[index]
-                                                            }
-                                                            : {
-                                                                height
-                                                            }%
-                                                        </Tooltip.Content>
-
-                                                    </Tooltip.Positioner>
-
-                                                </Tooltip.Root>
-                                            );
-                                        }
-                                    )}
-
-                                </HStack>
-
-                            </VStack>
-                        )}
-
-                    {/* MONTHLY VIEW */}
-
-                    {analyticsView ===
-                        "monthly" && (
-
-                            <Grid
-                                templateColumns="repeat(7, 1fr)"
-                                gap={2}
-                                mb={8}
-                            >
-
-                                {[
-                                    "M",
-                                    "T",
-                                    "W",
-                                    "T",
-                                    "F",
-                                    "S",
-                                    "S",
-                                ].map(
-                                    (
-                                        label,
-                                        i
-                                    ) => (
-
-                                        <Text
-                                            key={i}
-                                            textAlign="center"
-                                            fontSize="10px"
-                                            fontWeight="600"
-                                            color="#94A3B8"
-                                            textTransform="uppercase"
-                                            letterSpacing="0.08em"
-                                            mb={1}
-                                        >
-                                            {label}
-                                        </Text>
-                                    )
-                                )}
-
-                                {monthlyDays.map(
-                                    (
-                                        day,
-                                        index
-                                    ) => {
-
-                                        if (!day) {
-
-                                            return (
-
-                                                <Box
-                                                    key={`empty-${index}`}
-                                                    aspectRatio="1"
-                                                />
-                                            );
-                                        }
-
-                                        const colors =
-                                            dayColor(
-                                                day.rate
-                                            );
-
-                                        return (
-
-                                            <Tooltip.Root
-                                                key={day.date}
+                            {/* MONTHLY VIEW — 3 months */}
+                            {analyticsView ===
+                                "monthly" && (
+                                <VStack
+                                    align="stretch"
+                                    gap={6}
+                                    mb={6}
+                                >
+                                    {quarterMonths.map(
+                                        (
+                                            month
+                                        ) => (
+                                            <Box
+                                                key={month.label}
                                             >
-
-                                                <Tooltip.Trigger
-                                                    asChild
+                                                <Text
+                                                    fontSize="sm"
+                                                    fontWeight="600"
+                                                    color="#0F172A"
+                                                    _dark={{
+                                                        color:
+                                                            "#F8FAFC",
+                                                    }}
+                                                    mb={2}
                                                 >
+                                                    {
+                                                        month.label
+                                                    }
+                                                </Text>
+                                                <Grid
+                                                    templateColumns="repeat(7, 1fr)"
+                                                    gap={1.5}
+                                                >
+                                                    {[
+                                                        "M",
+                                                        "T",
+                                                        "W",
+                                                        "T",
+                                                        "F",
+                                                        "S",
+                                                        "S",
+                                                    ].map(
+                                                        (
+                                                            label,
+                                                            i
+                                                        ) => (
+                                                            <Text
+                                                                key={`${month.label}-h-${i}`}
+                                                                textAlign="center"
+                                                                fontSize="9px"
+                                                                fontWeight="600"
+                                                                color="#94A3B8"
+                                                                textTransform="uppercase"
+                                                                letterSpacing="0.08em"
+                                                                mb={0.5}
+                                                            >
+                                                                {label}
+                                                            </Text>
+                                                        )
+                                                    )}
 
-                                                    <Box
-                                                        aspectRatio="1"
-                                                        borderRadius="xl"
-                                                        bg={colors.bg}
-                                                        _dark={{
-                                                            bg: colors._dark_bg,
-                                                        }}
-                                                        cursor="pointer"
-                                                        transition="0.2s"
-                                                        _hover={{
-                                                            transform:
-                                                                "scale(1.1)",
-                                                        }}
-                                                        display="flex"
-                                                        alignItems="center"
-                                                        justifyContent="center"
-                                                        onClick={() => {
+                                                    {month.days.map(
+                                                        (
+                                                            day,
+                                                            index
+                                                        ) => {
+                                                            if (
+                                                                !day
+                                                            ) {
+                                                                return (
+                                                                    <Box
+                                                                        key={`${month.label}-e-${index}`}
+                                                                        aspectRatio="1"
+                                                                    />
+                                                                );
+                                                            }
 
-                                                            const week =
-                                                                getWeekBoundsForDate(
-                                                                    day.date
+                                                            const colors =
+                                                                dayColor(
+                                                                    day.rate
                                                                 );
 
-                                                            setSelectedDate(
-                                                                day.date
+                                                            return (
+                                                                <Tooltip.Root
+                                                                    key={day.date}
+                                                                >
+                                                                    <Tooltip.Trigger
+                                                                        asChild
+                                                                    >
+                                                                        <Box
+                                                                            aspectRatio="1"
+                                                                            borderRadius="md"
+                                                                            bg={colors.bg}
+                                                                            _dark={{
+                                                                                bg: colors._dark_bg,
+                                                                            }}
+                                                                            cursor="pointer"
+                                                                            transition="0.2s"
+                                                                            _hover={{
+                                                                                transform:
+                                                                                    "scale(1.15)",
+                                                                                zIndex: 1,
+                                                                            }}
+                                                                            display="flex"
+                                                                            alignItems="center"
+                                                                            justifyContent="center"
+                                                                            onClick={() => {
+                                                                                const wk =
+                                                                                    getWeekBoundsForDate(
+                                                                                        day.date
+                                                                                    );
+                                                                                setSelectedDate(
+                                                                                    day.date
+                                                                                );
+                                                                                setFrom(
+                                                                                    wk.from
+                                                                                );
+                                                                                setTo(
+                                                                                    wk.to
+                                                                                );
+                                                                                setAnalyticsView(
+                                                                                    "weekly"
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <Text
+                                                                                fontSize="10px"
+                                                                                fontWeight="600"
+                                                                                color={
+                                                                                    day.rate > 0
+                                                                                        ? "#0F172A"
+                                                                                        : "#94A3B8"
+                                                                                }
+                                                                                _dark={{
+                                                                                    color:
+                                                                                        day.rate > 0
+                                                                                            ? "#F8FAFC"
+                                                                                            : "#64748B",
+                                                                                }}
+                                                                            >
+                                                                                {
+                                                                                    day.dayNum
+                                                                                }
+                                                                            </Text>
+                                                                        </Box>
+                                                                    </Tooltip.Trigger>
+
+                                                                    <Tooltip.Positioner>
+                                                                        <Tooltip.Content
+                                                                            bg="#111827"
+                                                                            color="white"
+                                                                            borderRadius="xl"
+                                                                            px={3}
+                                                                            py={1.5}
+                                                                            fontSize="xs"
+                                                                        >
+                                                                            {
+                                                                                day.date
+                                                                            }
+                                                                            :{" "}
+                                                                            {
+                                                                                day.rate
+                                                                            }
+                                                                            %
+                                                                        </Tooltip.Content>
+                                                                    </Tooltip.Positioner>
+                                                                </Tooltip.Root>
                                                             );
-                                                            setFrom(week.from);
-                                                            setTo(week.to);
-                                                            setAnalyticsView(
-                                                                "weekly"
-                                                            );
-                                                        }}
-                                                    >
-
-                                                        <Text
-                                                            fontSize="xs"
-                                                            fontWeight="600"
-                                                            color={
-                                                                day.rate > 0
-                                                                    ? "#0F172A"
-                                                                    : "#94A3B8"
-                                                            }
-                                                            _dark={{
-                                                                color:
-                                                                    day.rate > 0
-                                                                        ? "#F8FAFC"
-                                                                        : "#64748B",
-                                                            }}
-                                                        >
-                                                            {
-                                                                day.dayNum
-                                                            }
-                                                        </Text>
-
-                                                    </Box>
-
-                                                </Tooltip.Trigger>
-
-                                                <Tooltip.Positioner>
-
-                                                    <Tooltip.Content
-                                                        bg="#111827"
-                                                        color="white"
-                                                        borderRadius="xl"
-                                                        px={3}
-                                                        py={1.5}
-                                                        fontSize="xs"
-                                                    >
-                                                        {
-                                                            day.date
                                                         }
-                                                        : {
-                                                            day.rate
-                                                        }%
-                                                    </Tooltip.Content>
+                                                    )}
+                                                </Grid>
+                                            </Box>
+                                        )
+                                    )}
+                                </VStack>
+                            )}
 
-                                                </Tooltip.Positioner>
-
-                                            </Tooltip.Root>
-                                        );
-                                    }
-                                )}
-
-                            </Grid>
-                        )}
-
-                    {/* STATS */}
-
-                    <VStack
-                        align="stretch"
-                        gap={5}
-                        mb={8}
-                    >
-
-                        {analytics.map(
-                            item => (
-
+                            {/* STATS */}
+                            <VStack
+                                align="stretch"
+                                gap={4}
+                                mb={6}
+                            >
                                 <Box
-                                    key={item.label}
-                                    p={4}
-                                    borderRadius="2xl"
+                                    p={3}
+                                    borderRadius="xl"
                                     bg="rgba(148,163,184,0.04)"
                                     _dark={{
-                                        bg: "rgba(148,163,184,0.06)",
-                                    }}
-                                    transition="0.2s"
-                                    _hover={{
-                                        bg: "rgba(148,163,184,0.08)",
+                                        bg:
+                                            "rgba(148,163,184,0.06)",
                                     }}
                                 >
-
                                     <Flex
                                         justify="space-between"
                                         align="center"
-                                        mb={3}
+                                        mb={2}
                                     >
-
                                         <HStack gap={2}>
-
                                             <Box
                                                 w="8px"
                                                 h="8px"
                                                 borderRadius="full"
-                                                bg={item.color}
-                                                boxShadow={`0 0 8px ${item.color}66`}
+                                                bg="#10B981"
                                             />
-
                                             <Text
                                                 fontSize="sm"
                                                 fontWeight="500"
@@ -2418,98 +2479,82 @@ const Dashboard = () => {
                                                         "#94A3B8",
                                                 }}
                                             >
-                                                {
-                                                    item.label
-                                                }
+                                                Consistency
                                             </Text>
-
                                         </HStack>
 
                                         <Text
-                                            fontSize="lg"
+                                            fontSize="md"
                                             fontWeight="700"
-                                            color={item.color}
+                                            color="#10B981"
                                         >
                                             {
-                                                item.value
+                                                consistency
                                             }
+                                            %
                                         </Text>
-
                                     </Flex>
 
                                     <Box
-                                        h="8px"
+                                        h="6px"
                                         borderRadius="full"
                                         overflow="hidden"
-                                        bg="rgba(99,102,241,0.08)"
+                                        bg="rgba(16,185,129,0.10)"
                                         _dark={{
-                                            bg: "rgba(99,102,241,0.14)",
+                                            bg:
+                                                "rgba(16,185,129,0.14)",
                                         }}
                                     >
-
                                         <Box
                                             h="full"
-                                            w={item.value}
-                                            bg={`linear-gradient(90deg, ${item.color}CC, ${item.color})`}
+                                            w={`${consistency}%`}
+                                            bg="#10B981"
                                             borderRadius="full"
-                                            transition="0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                                            transition="0.5s cubic-bezier(0.25, 1, 0.5, 1)"
                                         />
-
                                     </Box>
-
                                 </Box>
-                            )
-                        )}
+                            </VStack>
 
-                    </VStack>
-
-                    {/* DEEP ANALYTICS LINK */}
-
-                    <Link
-                        href="/analytics"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        w="full"
-                        py={3}
-                        borderRadius="2xl"
-                        border="1px dashed"
-                        borderColor="rgba(99,102,241,0.25)"
-                        _dark={{
-                            borderColor:
-                                "rgba(99,102,241,0.35)",
-                            color: "#818CF8",
-                        }}
-                        color="#6366F1"
-                        fontWeight="600"
-                        fontSize="sm"
-                        gap={2}
-                        transition="0.2s"
-                        _hover={{
-                            bg: "rgba(99,102,241,0.06)",
-                            borderColor:
-                                "#6366F1",
-                        }}
-                    >
-
-                        <LuChartNoAxesCombined />
-
-                        View Deep Analytics
-
-                        <LuArrowRight />
-
-                    </Link>
-
-                </Box>
-
-                </Box>
-
-            </Grid>
-
+                            {/* DEEP ANALYTICS LINK */}
+                            <Link
+                                href="/analytics"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                w="full"
+                                py={3}
+                                borderRadius="2xl"
+                                border="1px dashed"
+                                borderColor="rgba(99,102,241,0.25)"
+                                _dark={{
+                                    borderColor:
+                                        "rgba(99,102,241,0.35)",
+                                    color:
+                                        "#818CF8",
+                                }}
+                                color="#6366F1"
+                                fontWeight="600"
+                                fontSize="sm"
+                                gap={2}
+                                transition="0.2s"
+                                _hover={{
+                                    bg:
+                                        "rgba(99,102,241,0.06)",
+                                    borderColor:
+                                        "#6366F1",
+                                }}
+                            >
+                                <LuChartNoAxesCombined />
+                                View Deep Analytics
+                                <LuArrowRight />
+                            </Link>
+                        </Box>
+                    </Box>
+                </Grid>
             </Box>
-
         </Box>
     );
-}
+};
 
 export default Dashboard;

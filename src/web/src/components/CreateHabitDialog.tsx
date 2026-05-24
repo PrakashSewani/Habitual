@@ -13,7 +13,6 @@ import {
     Flex,
     HStack,
     Input,
-    SegmentGroup,
     Text,
     Textarea,
     VStack,
@@ -167,50 +166,7 @@ const CreateHabitDialog = ({
             .length === 0;
     };
 
-    const getScheduleTheme = (
-        type: string
-    ) => {
 
-        switch (type) {
-
-            case "0":
-                return {
-                    border:
-                        "rgba(99,102,241,0.22)",
-                    glow:
-                        "rgba(99,102,241,0.12)",
-                };
-
-            case "1":
-                return {
-                    border:
-                        "rgba(245,158,11,0.22)",
-                    glow:
-                        "rgba(245,158,11,0.12)",
-                };
-
-            case "2":
-                return {
-                    border:
-                        "rgba(139,92,246,0.22)",
-                    glow:
-                        "rgba(139,92,246,0.12)",
-                };
-
-            default:
-                return {
-                    border:
-                        "rgba(148,163,184,0.22)",
-                    glow:
-                        "rgba(148,163,184,0.12)",
-                };
-        }
-    };
-
-    const scheduleTheme =
-        getScheduleTheme(
-            scheduleType
-        );
 
     // ========================================
     // HANDLERS
@@ -350,49 +306,25 @@ const CreateHabitDialog = ({
             <Dialog.Positioner>
 
                 <Dialog.Content
-                    borderRadius="32px"
+                    borderRadius="24px"
                     overflow="hidden"
                     bg="white"
-                    _dark={{
-                        bg: "#0F172A",
-                    }}
                     border="1px solid"
-                    borderColor={
-                        scheduleTheme.border
-                    }
-                    boxShadow="
-                        0 25px 80px rgba(0,0,0,0.35)
-                    "
-                    maxW="620px"
+                    borderColor="rgba(148,163,184,0.16)"
+                    boxShadow="0 20px 60px rgba(0,0,0,0.12)"
+                    maxW="580px"
                     w="full"
                     p={0}
-                    position="relative"
+                    _dark={{
+                        bg: "#0F172A",
+                        borderColor:
+                            "rgba(255,255,255,0.06)",
+                    }}
                 >
-
-                    {/* AMBIENT GLOW */}
-
-                    <Box
-                        position="absolute"
-                        top="-120px"
-                        right="-120px"
-                        w="280px"
-                        h="280px"
-                        bg={
-                            scheduleTheme.glow
-                        }
-                        borderRadius="full"
-                        filter="blur(80px)"
-                        zIndex={0}
-                    />
-
-                    {/* HEADER */}
-
                     <Dialog.Header
                         px={8}
                         pt={8}
                         pb={4}
-                        position="relative"
-                        zIndex={2}
                     >
 
                         <VStack
@@ -446,8 +378,6 @@ const CreateHabitDialog = ({
                     <Dialog.Body
                         px={8}
                         pb={6}
-                        position="relative"
-                        zIndex={2}
                     >
 
                         <VStack
@@ -834,8 +764,6 @@ const CreateHabitDialog = ({
                         pb={8}
                         pt={2}
                         gap={3}
-                        position="relative"
-                        zIndex={2}
                     >
 
                         <Dialog.ActionTrigger

@@ -47,133 +47,107 @@ import {
     getDateKey,
 } from "@/lib/analytics";
 
-// ========================================
-// STAT CARD
-// ========================================
-
-const StatCard = ({
+const StatPill = ({
     icon,
     label,
     value,
     accent,
-    sub,
 }: {
     icon: React.ReactNode;
     label: string;
     value: string;
     accent: string;
-    sub?: string;
 }) => (
-
-    <Box
-        p={5}
-        borderRadius="2xl"
-        border="1px solid"
-        borderColor="rgba(148,163,184,0.22)"
+    <HStack
+        gap={3}
+        px={4}
+        py={3}
+        borderRadius="xl"
         bg="white"
+        border="1px solid"
+        borderColor="rgba(148,163,184,0.14)"
+        flex="1"
+        minW="140px"
         _dark={{
             bg: "#111827",
-        }}
-        transition="0.2s"
-        _hover={{
-            borderColor: `${accent}44`,
+            borderColor:
+                "rgba(255,255,255,0.06)",
         }}
     >
-
-        <HStack
-            gap={3}
-            mb={3}
+        <Box
+            p={2}
+            borderRadius="lg"
+            bg={`${accent}14`}
+            color={accent}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            flexShrink={0}
         >
+            {icon}
+        </Box>
 
-            <Box
-                p={2}
-                borderRadius="xl"
-                bg={`${accent}14`}
-                color={accent}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-            >
-                {icon}
-            </Box>
-
+        <VStack
+            gap={0}
+            align="start"
+        >
             <Text
                 fontSize="sm"
-                color="#64748B"
+                fontWeight="700"
+                color="#0F172A"
                 _dark={{
-                    color: "#94A3B8",
+                    color:
+                        "#F8FAFC",
                 }}
-                fontWeight="500"
+                lineHeight="1.2"
             >
-                {label}
+                {value}
             </Text>
-
-        </HStack>
-
-        <Heading
-            size="lg"
-            color="#0F172A"
-            _dark={{
-                color: "#F8FAFC",
-            }}
-            mb={1}
-        >
-            {value}
-        </Heading>
-
-        {sub && (
-
             <Text
                 fontSize="xs"
                 color="#64748B"
                 _dark={{
-                    color: "#94A3B8",
+                    color:
+                        "#94A3B8",
                 }}
             >
-                {sub}
+                {label}
             </Text>
-        )}
-
-    </Box>
+        </VStack>
+    </HStack>
 );
-
-// ========================================
-// TREND BARS
-// ========================================
 
 const TrendChart = ({
     data,
 }: {
     data: WeekTrend[];
 }) => {
-
     const maxCount = Math.max(
         1,
         ...data.map(d => d.count)
     );
 
     return (
-
         <Box
             p={6}
             borderRadius="2xl"
             border="1px solid"
-            borderColor="rgba(148,163,184,0.22)"
+            borderColor="rgba(148,163,184,0.14)"
             bg="white"
             _dark={{
                 bg: "#111827",
+                borderColor:
+                    "rgba(255,255,255,0.06)",
             }}
         >
-
             <HStack
                 gap={2}
                 mb={6}
             >
-
                 <Box
                     p={2}
                     borderRadius="xl"
-                    bg="rgba(99,102,241,0.12)"
+                    bg="rgba(99,102,241,0.10)"
                     color="#6366F1"
                     display="flex"
                     alignItems="center"
@@ -193,28 +167,24 @@ const TrendChart = ({
                 >
                     Weekly Activity
                 </Text>
-
             </HStack>
 
             <Flex
                 align="flex-end"
                 justify="space-between"
                 gap={3}
-                h="160px"
+                h="140px"
             >
-
                 {data.map((
                     week,
                     i
                 ) => {
-
                     const pct =
                         (week.count /
                             maxCount) *
                         100;
 
                     return (
-
                         <VStack
                             key={i}
                             gap={2}
@@ -223,7 +193,6 @@ const TrendChart = ({
                             justify="flex-end"
                             minW="40px"
                         >
-
                             <Text
                                 fontSize="xs"
                                 fontWeight="600"
@@ -240,11 +209,11 @@ const TrendChart = ({
                                 w="100%"
                                 maxW="36px"
                                 borderRadius="lg"
-                                bg="linear-gradient(180deg, #6366F1, #818CF8)"
+                                bg="#6366F1"
                                 opacity={
                                     week.count > 0
                                         ? 1
-                                        : 0.25
+                                        : 0.2
                                 }
                                 transition="0.3s"
                                 h={`${Math.max(
@@ -252,21 +221,16 @@ const TrendChart = ({
                                     4
                                 )}%`}
                                 position="relative"
-                                _dark={{
-                                    bg: "linear-gradient(180deg, #6366F1, #818CF8)",
-                                }}
                             >
-
                                 <Box
                                     position="absolute"
                                     top="0"
                                     left="0"
                                     right="0"
-                                    h="40%"
+                                    h="35%"
                                     borderRadius="lg"
-                                    bg="linear-gradient(180deg, rgba(255,255,255,0.20), transparent)"
+                                    bg="linear-gradient(180deg, rgba(255,255,255,0.18), transparent)"
                                 />
-
                             </Box>
 
                             <Text
@@ -281,83 +245,66 @@ const TrendChart = ({
                             >
                                 {week.label}
                             </Text>
-
                         </VStack>
                     );
                 })}
-
             </Flex>
-
         </Box>
     );
 };
-
-// ========================================
-// HEATMAP
-// ========================================
 
 const Heatmap = ({
     data,
 }: {
     data: HeatmapDay[];
 }) => {
-
     const maxCount = Math.max(
         1,
         ...data.map(d => d.count)
     );
 
     const levels = [
-        "rgba(148,163,184,0.12)",
-        "#BBF7D0",
-        "#86EFAC",
-        "#4ADE80",
-        "#22C55E",
-        "#16A34A",
+        "rgba(148,163,184,0.10)",
+        "rgba(16,185,129,0.18)",
+        "rgba(16,185,129,0.32)",
+        "rgba(16,185,129,0.48)",
+        "rgba(16,185,129,0.64)",
+        "rgba(16,185,129,0.82)",
     ];
 
     const darkLevels = [
-        "rgba(148,163,184,0.12)",
-        "rgba(34,197,94,0.18)",
-        "rgba(34,197,94,0.35)",
-        "rgba(34,197,94,0.55)",
-        "rgba(34,197,94,0.75)",
-        "rgba(34,197,94,0.95)",
+        "rgba(148,163,184,0.10)",
+        "rgba(16,185,129,0.14)",
+        "rgba(16,185,129,0.28)",
+        "rgba(16,185,129,0.42)",
+        "rgba(16,185,129,0.58)",
+        "rgba(16,185,129,0.74)",
     ];
 
     const getLevel = (
         count: number
     ) => {
-
         if (count === 0)
             return 0;
-
         const ratio =
             count / maxCount;
-
         if (ratio <= 0.2)
             return 1;
-
         if (ratio <= 0.4)
             return 2;
-
         if (ratio <= 0.6)
             return 3;
-
         if (ratio <= 0.8)
             return 4;
-
         return 5;
     };
 
     const weeks: HeatmapDay[][] = [];
-
     let currentWeek: HeatmapDay[] = [];
 
     const firstDate = parseDateKey(
         data[0].date
     );
-
     const startDay = firstDate.getDay();
 
     for (
@@ -365,7 +312,6 @@ const Heatmap = ({
         i < startDay;
         i++
     ) {
-
         currentWeek.push({
             date: "",
             count: -1,
@@ -373,31 +319,24 @@ const Heatmap = ({
     }
 
     for (const day of data) {
-
         currentWeek.push(day);
-
         if (
             currentWeek.length === 7
         ) {
-
             weeks.push(currentWeek);
-
             currentWeek = [];
         }
     }
 
     if (currentWeek.length > 0) {
-
         while (
             currentWeek.length < 7
         ) {
-
             currentWeek.push({
                 date: "",
                 count: -1,
             });
         }
-
         weeks.push(currentWeek);
     }
 
@@ -412,27 +351,26 @@ const Heatmap = ({
     ];
 
     return (
-
         <Box
             p={6}
             borderRadius="2xl"
             border="1px solid"
-            borderColor="rgba(148,163,184,0.22)"
+            borderColor="rgba(148,163,184,0.14)"
             bg="white"
             _dark={{
                 bg: "#111827",
+                borderColor:
+                    "rgba(255,255,255,0.06)",
             }}
         >
-
             <HStack
                 gap={2}
                 mb={4}
             >
-
                 <Box
                     p={2}
                     borderRadius="xl"
-                    bg="rgba(16,185,129,0.12)"
+                    bg="rgba(16,185,129,0.10)"
                     color="#10B981"
                     display="flex"
                     alignItems="center"
@@ -463,7 +401,6 @@ const Heatmap = ({
                 >
                     Last 90 days
                 </Text>
-
             </HStack>
 
             <Flex
@@ -471,19 +408,16 @@ const Heatmap = ({
                 overflowX="auto"
                 pb={2}
             >
-
                 <VStack
                     gap={1}
                     mr={1}
                 >
-
                     <Box h="16px" />
 
                     {dayLabels.map((
                         label,
                         i
                     ) => (
-
                         <Text
                             key={label}
                             fontSize="9px"
@@ -503,34 +437,28 @@ const Heatmap = ({
                                 : ""}
                         </Text>
                     ))}
-
                 </VStack>
 
                 {weeks.map((
                     week,
                     wi
                 ) => (
-
                     <VStack
                         key={wi}
                         gap={1}
                     >
-
                         {week.map((
                             day,
                             di
                         ) => {
-
                             const level =
                                 getLevel(
                                     day.count
                                 );
-
                             const isEmpty =
                                 day.count < 0;
 
                             return (
-
                                 <Box
                                     key={di}
                                     w="16px"
@@ -569,10 +497,8 @@ const Heatmap = ({
                                 />
                             );
                         })}
-
                     </VStack>
                 ))}
-
             </Flex>
 
             <HStack
@@ -580,7 +506,6 @@ const Heatmap = ({
                 mt={3}
                 justify="flex-end"
             >
-
                 <Text
                     fontSize="10px"
                     color="#64748B"
@@ -595,7 +520,6 @@ const Heatmap = ({
                     0, 1, 2, 3,
                     4, 5,
                 ].map(l => (
-
                     <Box
                         key={l}
                         w="12px"
@@ -617,9 +541,7 @@ const Heatmap = ({
                 >
                     More
                 </Text>
-
             </HStack>
-
         </Box>
     );
 };
@@ -627,7 +549,6 @@ const Heatmap = ({
 const parseDateKey = (
     key: string
 ): Date => {
-
     const [
         y,
         m,
@@ -641,16 +562,11 @@ const parseDateKey = (
     );
 };
 
-// ========================================
-// HABIT RANKINGS
-// ========================================
-
 const HabitRankings = ({
     stats,
 }: {
     stats: HabitStat[];
 }) => {
-
     const sorted = [...stats].sort(
         (a, b) =>
             b.currentStreak -
@@ -658,27 +574,26 @@ const HabitRankings = ({
     );
 
     return (
-
         <Box
             p={6}
             borderRadius="2xl"
             border="1px solid"
-            borderColor="rgba(148,163,184,0.22)"
+            borderColor="rgba(148,163,184,0.14)"
             bg="white"
             _dark={{
                 bg: "#111827",
+                borderColor:
+                    "rgba(255,255,255,0.06)",
             }}
         >
-
             <HStack
                 gap={2}
                 mb={5}
             >
-
                 <Box
                     p={2}
                     borderRadius="xl"
-                    bg="rgba(245,158,11,0.12)"
+                    bg="rgba(245,158,11,0.10)"
                     color="#F59E0B"
                     display="flex"
                     alignItems="center"
@@ -698,41 +613,39 @@ const HabitRankings = ({
                 >
                     Habit Rankings
                 </Text>
-
             </HStack>
 
             <VStack
                 gap={3}
                 align="stretch"
             >
-
                 {sorted.map((
                     s,
                     i
                 ) => (
-
                     <HStack
                         key={s.habit.id}
                         gap={3}
                         p={3}
                         borderRadius="xl"
-                        bg="rgba(148,163,184,0.06)"
+                        bg="rgba(148,163,184,0.04)"
                         _dark={{
-                            bg: "rgba(148,163,184,0.08)",
+                            bg:
+                                "rgba(148,163,184,0.06)",
                         }}
                     >
-
                         <Box
                             w="28px"
                             h="28px"
                             borderRadius="full"
-                            bg="linear-gradient(135deg, #6366F1, #818CF8)"
+                            bg="#6366F1"
                             color="white"
                             display="flex"
                             alignItems="center"
                             justifyContent="center"
                             fontSize="xs"
                             fontWeight="700"
+                            flexShrink={0}
                         >
                             {i + 1}
                         </Box>
@@ -741,8 +654,8 @@ const HabitRankings = ({
                             gap={0}
                             align="start"
                             flex="1"
+                            minW={0}
                         >
-
                             <Text
                                 fontWeight="600"
                                 fontSize="sm"
@@ -751,14 +664,12 @@ const HabitRankings = ({
                                     color:
                                         "#F8FAFC",
                                 }}
+                                truncate
                             >
                                 {s.habit.name}
                             </Text>
 
-                            <HStack
-                                gap={3}
-                            >
-
+                            <HStack gap={3}>
                                 <Text
                                     fontSize="xs"
                                     color="#64748B"
@@ -782,9 +693,7 @@ const HabitRankings = ({
                                     {s.totalLogs}{" "}
                                     total
                                 </Text>
-
                             </HStack>
-
                         </VStack>
 
                         <HStack
@@ -792,14 +701,15 @@ const HabitRankings = ({
                             px={2.5}
                             py={1}
                             borderRadius="full"
-                            bg="rgba(16,185,129,0.10)"
+                            bg="rgba(16,185,129,0.08)"
                             _dark={{
-                                bg: "rgba(16,185,129,0.15)",
+                                bg:
+                                    "rgba(16,185,129,0.12)",
                             }}
                             fontSize="xs"
                             fontWeight="600"
+                            flexShrink={0}
                         >
-
                             <LuCalendarCheck
                                 size={12}
                                 color="#10B981"
@@ -816,24 +726,15 @@ const HabitRankings = ({
                                 {s.thisWeekLogs}
                                 {" "}this week
                             </Text>
-
                         </HStack>
-
                     </HStack>
                 ))}
-
             </VStack>
-
         </Box>
     );
 };
 
-// ========================================
-// PAGE
-// ========================================
-
 const AnalyticsPage = () => {
-
     const {
         user,
         loading: userLoading,
@@ -865,7 +766,6 @@ const AnalyticsPage = () => {
         : getHabitStats(habits);
 
     return (
-
         <Box
             h="100dvh"
             overflow="hidden"
@@ -873,35 +773,30 @@ const AnalyticsPage = () => {
             flexDirection="column"
             bg="#FAFAFF"
             _dark={{
-                bg: "#020617",
+                bg: "#0B0F1A",
             }}
         >
-
             <UserNavbar
                 userName={user?.name}
                 currentTime={new Date()}
                 logout={logout}
             />
 
-            {/* HEADER */}
-
             <Box
                 px={{
-                    base: 6,
+                    base: 4,
+                    md: 8,
                     lg: 10,
                 }}
                 pt={6}
                 pb={4}
                 flexShrink={0}
             >
-
                 <HStack
                     gap={4}
                     mb={4}
                 >
-
                     <Link href="/dashboard">
-
                         <Button
                             size="sm"
                             variant="ghost"
@@ -911,27 +806,26 @@ const AnalyticsPage = () => {
                                 color: "#94A3B8",
                             }}
                             _hover={{
-                                bg: "rgba(99,102,241,0.08)",
-                                color: "#6366F1",
+                                bg:
+                                    "rgba(99,102,241,0.08)",
+                                color:
+                                    "#6366F1",
                             }}
                         >
                             <LuArrowLeft />
                             Dashboard
                         </Button>
-
                     </Link>
-
                 </HStack>
 
                 <HStack
                     gap={3}
                     align="center"
                 >
-
                     <Box
                         p={2.5}
                         borderRadius="xl"
-                        bg="linear-gradient(135deg, #6366F1, #818CF8)"
+                        bg="#6366F1"
                         color="white"
                         display="flex"
                         alignItems="center"
@@ -951,75 +845,51 @@ const AnalyticsPage = () => {
                     >
                         Analytics
                     </Heading>
-
                 </HStack>
-
             </Box>
-
-            {/* SCROLLABLE BODY */}
 
             <Box
                 flex="1"
                 overflowY="auto"
                 px={{
-                    base: 6,
+                    base: 4,
+                    md: 8,
                     lg: 10,
                 }}
                 pb={10}
             >
-
                 {/* STATS */}
-
                 {isLoading && (
-
-                    <Grid
-                        templateColumns={{
-                            base:
-                                "repeat(2,1fr)",
-                            md:
-                                "repeat(3,1fr)",
-                            lg:
-                                "repeat(6,1fr)",
-                        }}
-                        gap={4}
+                    <HStack
+                        gap={3}
                         mb={8}
+                        flexWrap="wrap"
                     >
-
-                        {[
-                            1, 2, 3, 4,
-                            5, 6,
-                        ].map(i => (
-
-                            <Skeleton
-                                key={i}
-                                h="100px"
-                                borderRadius="2xl"
-                            />
-                        ))}
-
-                    </Grid>
+                        {[1, 2, 3, 4, 5, 6].map(
+                            i => (
+                                <Skeleton
+                                    key={i}
+                                    h="64px"
+                                    borderRadius="xl"
+                                    flex="1"
+                                    minW="140px"
+                                />
+                            )
+                        )}
+                    </HStack>
                 )}
 
                 {!isLoading &&
                     globalStats && (
-
-                        <Grid
-                            templateColumns={{
-                                base:
-                                    "repeat(2,1fr)",
-                                md:
-                                    "repeat(3,1fr)",
-                                lg:
-                                    "repeat(6,1fr)",
-                            }}
-                            gap={4}
+                        <HStack
+                            gap={3}
                             mb={8}
+                            flexWrap="wrap"
                         >
-
-                            <StatCard
+                            <StatPill
                                 icon={
                                     <LuLayers
-                                        size={18}
+                                        size={16}
                                     />
                                 }
                                 label="Total Habits"
@@ -1027,13 +897,12 @@ const AnalyticsPage = () => {
                                     globalStats.totalHabits
                                 )}
                                 accent="#6366F1"
-                                sub={`${globalStats.activeHabits} active`}
                             />
 
-                            <StatCard
+                            <StatPill
                                 icon={
                                     <LuActivity
-                                        size={18}
+                                        size={16}
                                     />
                                 }
                                 label="Total Logs"
@@ -1043,10 +912,10 @@ const AnalyticsPage = () => {
                                 accent="#10B981"
                             />
 
-                            <StatCard
+                            <StatPill
                                 icon={
                                     <LuCalendarDays
-                                        size={18}
+                                        size={16}
                                     />
                                 }
                                 label="This Week"
@@ -1056,10 +925,10 @@ const AnalyticsPage = () => {
                                 accent="#F59E0B"
                             />
 
-                            <StatCard
+                            <StatPill
                                 icon={
                                     <LuFlame
-                                        size={18}
+                                        size={16}
                                     />
                                 }
                                 label="Best Streak"
@@ -1067,10 +936,10 @@ const AnalyticsPage = () => {
                                 accent="#EF4444"
                             />
 
-                            <StatCard
+                            <StatPill
                                 icon={
                                     <LuTrendingUp
-                                        size={18}
+                                        size={16}
                                     />
                                 }
                                 label="Avg / Day"
@@ -1080,10 +949,10 @@ const AnalyticsPage = () => {
                                 accent="#8B5CF6"
                             />
 
-                            <StatCard
+                            <StatPill
                                 icon={
                                     <LuChartBar
-                                        size={18}
+                                        size={16}
                                     />
                                 }
                                 label="Active Rate"
@@ -1097,12 +966,10 @@ const AnalyticsPage = () => {
                                 )}%`}
                                 accent="#3B82F6"
                             />
-
-                        </Grid>
+                        </HStack>
                     )}
 
                 {/* CHARTS + RANKINGS */}
-
                 <Grid
                     templateColumns={{
                         base: "1fr",
@@ -1111,65 +978,47 @@ const AnalyticsPage = () => {
                     gap={6}
                     alignItems="start"
                 >
-
                     <VStack
                         gap={6}
                         align="stretch"
                     >
-
                         {isLoading ? (
-
                             <>
-
                                 <Skeleton
-                                    h="260px"
+                                    h="240px"
                                     borderRadius="2xl"
                                 />
-
                                 <Skeleton
-                                    h="260px"
+                                    h="240px"
                                     borderRadius="2xl"
                                 />
-
                             </>
                         ) : (
-
                             <>
-
                                 <TrendChart
                                     data={weeklyTrend}
                                 />
-
                                 <Heatmap
                                     data={heatmapData}
                                 />
-
                             </>
                         )}
-
                     </VStack>
 
                     <Box>
-
                         {isLoading ? (
-
                             <Skeleton
                                 h="400px"
                                 borderRadius="2xl"
                             />
                         ) : (
-
                             <HabitRankings
                                 stats={habitStats}
                             />
                         )}
-
                     </Box>
-
                 </Grid>
-
             </Box>
-
         </Box>
     );
 };
