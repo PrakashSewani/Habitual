@@ -128,6 +128,13 @@ const Dashboard = () => {
         setSearchOpen,
     ] = useState(false);
 
+    const [
+        habitTimeFilter,
+        setHabitTimeFilter,
+    ] = useState<
+        "all" | "week" | "month" | "year"
+    >("all");
+
     // ========================================
     // DATA
     // ========================================
@@ -142,6 +149,79 @@ const Dashboard = () => {
             debouncedSearch ||
             undefined,
     });
+
+    // ========================================
+    // HABIT TIME FILTER
+    // ========================================
+
+    const filteredHabits =
+        useMemo(() => {
+
+            if (
+                habitTimeFilter === "all"
+            )
+                return habits;
+
+            const now = new Date();
+
+            return habits.filter(
+                h => {
+
+                    const created =
+                        new Date(
+                            h.createdAt
+                        );
+
+                    if (
+                        habitTimeFilter ===
+                        "week"
+                    ) {
+
+                        const weekAgo =
+                            new Date(
+                                now
+                            );
+
+                        weekAgo.setDate(
+                            now.getDate() - 7
+                        );
+
+                        return (
+                            created >= weekAgo
+                        );
+                    }
+
+                    if (
+                        habitTimeFilter ===
+                        "month"
+                    ) {
+
+                        return (
+                            created.getMonth() ===
+                            now.getMonth() &&
+                            created.getFullYear() ===
+                            now.getFullYear()
+                        );
+                    }
+
+                    if (
+                        habitTimeFilter ===
+                        "year"
+                    ) {
+
+                        return (
+                            created.getFullYear() ===
+                            now.getFullYear()
+                        );
+                    }
+
+                    return true;
+                }
+            );
+        }, [
+            habits,
+            habitTimeFilter,
+        ]);
 
     // ========================================
     // HABIT LOG
@@ -311,8 +391,12 @@ const Dashboard = () => {
     // FILTER HELPERS
     // ========================================
 
+    const currentWeekBounds =
+        getWeekBounds();
+
     const isCustomFilter =
-        selectedDate !== todayString ||
+        selectedDate < currentWeekBounds.from ||
+        selectedDate > currentWeekBounds.to ||
         search !== "";
 
     const resetFilters = () => {
@@ -1310,7 +1394,7 @@ const Dashboard = () => {
                         {/* EMPTY */}
 
                         {!habitsLoading &&
-                            habits.length === 0 && (
+                            filteredHabits.length === 0 && (
 
                                 <VStack py={24}>
 
@@ -1342,7 +1426,7 @@ const Dashboard = () => {
                         {/* HABITS */}
 
                         {!habitsLoading &&
-                            habits.length > 0 && (
+                            filteredHabits.length > 0 && (
 
                                 <Grid
                                     templateColumns={{
@@ -1357,7 +1441,7 @@ const Dashboard = () => {
                                     mb={12}
                                 >
 
-                            {habits.map(habit => {
+                            {filteredHabits.map(habit => {
 
                                 const isCompletedSelected =
                                     habit.habitLogs.some(
@@ -1852,21 +1936,44 @@ const Dashboard = () => {
                                     </IconButton>
 
                                     <VStack
-                                        gap={0}
+                                        gap={1}
                                         align="center"
                                     >
 
-                                        <Text
-                                            fontSize="sm"
-                                            fontWeight="600"
-                                            color="#0F172A"
-                                            _dark={{
-                                                color:
-                                                    "#F8FAFC",
-                                            }}
-                                        >
-                                            {from} — {to}
-                                        </Text>
+                                        <HStack gap={2}>
+
+                                            <Text
+                                                fontSize="sm"
+                                                fontWeight="600"
+                                                color="#0F172A"
+                                                _dark={{
+                                                    color:
+                                                        "#F8FAFC",
+                                                }}
+                                            >
+                                                {from} — {to}
+                                            </Text>
+
+                                            {selectedDate === todayString && (
+
+                                                <Badge
+                                                    px={2}
+                                                    py={0.5}
+                                                    borderRadius="full"
+                                                    bg="rgba(16,185,129,0.15)"
+                                                    color="#10B981"
+                                                    _dark={{
+                                                        bg: "rgba(16,185,129,0.20)",
+                                                        color: "#34D399",
+                                                    }}
+                                                    fontSize="10px"
+                                                    fontWeight="700"
+                                                >
+                                                    TODAY
+                                                </Badge>
+                                            )}
+
+                                        </HStack>
 
                                         <Text
                                             fontSize="xs"
@@ -1876,7 +1983,11 @@ const Dashboard = () => {
                                                     "#94A3B8",
                                             }}
                                         >
-                                            Selected: {selectedDate}
+                                            {new Date(selectedDate).toLocaleDateString("en-US", {
+                                                weekday: "long",
+                                                month: "short",
+                                                day: "numeric",
+                                            })}
                                         </Text>
 
                                     </VStack>
@@ -1899,108 +2010,199 @@ const Dashboard = () => {
 
                                 <HStack
                                     align="end"
-                                    h="220px"
-                                    gap={4}
+                                    h="200px"
+                                    gap={3}
+                                    px={2}
                                 >
 
                                     {weeklyProgress.map(
                                         (
                                             height,
                                             index
-                                        ) => (
+                                        ) => {
 
-                                            <Tooltip.Root
-                                                key={index}
-                                            >
+                                            const isSelected =
+                                                analyticsWeekDays[index] === selectedDate;
 
-                                                <Tooltip.Trigger
-                                                    asChild
+                                            const isTodayBar =
+                                                analyticsWeekDays[index] === todayString;
+
+                                            const barGradient =
+                                                height >= 80
+                                                    ? "linear-gradient(180deg, #34D399 0%, #10B981 100%)"
+                                                    : height >= 50
+                                                        ? "linear-gradient(180deg, #818CF8 0%, #6366F1 100%)"
+                                                        : "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)";
+
+                                            return (
+
+                                                <Tooltip.Root
+                                                    key={index}
                                                 >
 
-                                                    <Box
-                                                        flex="1"
-                                                        h={`${height}%`}
-                                                        borderRadius="2xl"
-                                                        bg={
-                                                            height >= 80
-                                                                ? "#10B981"
-                                                                : height >= 50
-                                                                    ? "#6366F1"
-                                                                    : "#F59E0B"
-                                                        }
-                                                        transition="0.3s"
-                                                        position="relative"
-                                                        cursor="pointer"
+                                                    <Tooltip.Trigger
+                                                        asChild
                                                     >
 
-                                                        {height > 0 && (
+                                                        <VStack
+                                                            gap={2}
+                                                            flex="1"
+                                                            align="center"
+                                                            justify="flex-end"
+                                                            cursor="pointer"
+                                                            onClick={() =>
+                                                                setSelectedDate(
+                                                                    analyticsWeekDays[index]
+                                                                )
+                                                            }
+                                                        >
 
                                                             <Text
-                                                                position="absolute"
-                                                                top="8px"
-                                                                left="50%"
-                                                                transform="translateX(-50%)"
                                                                 fontSize="10px"
                                                                 fontWeight="700"
-                                                                color="white"
+                                                                color={
+                                                                    isSelected
+                                                                        ? "#6366F1"
+                                                                        : "#64748B"
+                                                                }
+                                                                _dark={{
+                                                                    color:
+                                                                        isSelected
+                                                                            ? "#818CF8"
+                                                                            : "#94A3B8",
+                                                                }}
+                                                                transition="0.2s"
                                                             >
                                                                 {height}%
                                                             </Text>
-                                                        )}
 
-                                                        <Text
-                                                            position="absolute"
-                                                            bottom="-24px"
-                                                            left="50%"
-                                                            transform="translateX(-50%)"
-                                                            fontSize="10px"
-                                                            color="#64748B"
-                                                            _dark={{
-                                                                color:
-                                                                    "#94A3B8",
-                                                            }}
-                                                            textTransform="uppercase"
-                                                            letterSpacing="0.08em"
+                                                            <Box
+                                                                w="100%"
+                                                                maxW="40px"
+                                                                h={`${Math.max(height, 6)}%`}
+                                                                minH="4px"
+                                                                borderRadius="xl"
+                                                                bg={barGradient}
+                                                                opacity={
+                                                                    height > 0
+                                                                        ? 1
+                                                                        : 0.3
+                                                                }
+                                                                transition="0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                                                                position="relative"
+                                                                overflow="hidden"
+                                                                boxShadow={
+                                                                    isSelected
+                                                                        ? "0 0 12px rgba(99,102,241,0.35)"
+                                                                        : "none"
+                                                                }
+                                                                border={
+                                                                    isSelected
+                                                                        ? "2px solid"
+                                                                        : "none"
+                                                                }
+                                                                borderColor={
+                                                                    isSelected
+                                                                        ? "#6366F1"
+                                                                        : "transparent"
+                                                                }
+                                                                _dark={{
+                                                                    borderColor:
+                                                                        isSelected
+                                                                            ? "#818CF8"
+                                                                            : "transparent",
+                                                                }}
+                                                            >
+
+                                                                <Box
+                                                                    position="absolute"
+                                                                    top="0"
+                                                                    left="0"
+                                                                    right="0"
+                                                                    h="35%"
+                                                                    bg="linear-gradient(180deg, rgba(255,255,255,0.25), transparent)"
+                                                                    borderRadius="xl"
+                                                                />
+
+                                                            </Box>
+
+                                                            <HStack gap={1} align="center">
+
+                                                                {isTodayBar && (
+
+                                                                    <Box
+                                                                        w="5px"
+                                                                        h="5px"
+                                                                        borderRadius="full"
+                                                                        bg="#10B981"
+                                                                        boxShadow="0 0 6px rgba(16,185,129,0.6)"
+                                                                    />
+                                                                )}
+
+                                                                <Text
+                                                                    fontSize="9px"
+                                                                    fontWeight="600"
+                                                                    color={
+                                                                        isSelected
+                                                                            ? "#6366F1"
+                                                                            : isTodayBar
+                                                                                ? "#10B981"
+                                                                                : "#94A3B8"
+                                                                    }
+                                                                    _dark={{
+                                                                        color:
+                                                                            isSelected
+                                                                                ? "#818CF8"
+                                                                                : isTodayBar
+                                                                                    ? "#34D399"
+                                                                                    : "#64748B",
+                                                                    }}
+                                                                    textTransform="uppercase"
+                                                                    letterSpacing="0.06em"
+                                                                    transition="0.2s"
+                                                                >
+                                                                    {
+                                                                        [
+                                                                            "M",
+                                                                            "T",
+                                                                            "W",
+                                                                            "T",
+                                                                            "F",
+                                                                            "S",
+                                                                            "S",
+                                                                        ][index]
+                                                                    }
+                                                                </Text>
+
+                                                            </HStack>
+
+                                                        </VStack>
+
+                                                    </Tooltip.Trigger>
+
+                                                    <Tooltip.Positioner>
+
+                                                        <Tooltip.Content
+                                                            bg="#111827"
+                                                            color="white"
+                                                            borderRadius="xl"
+                                                            px={3}
+                                                            py={1.5}
+                                                            fontSize="xs"
                                                         >
                                                             {
-                                                                [
-                                                                    "Mon",
-                                                                    "Tue",
-                                                                    "Wed",
-                                                                    "Thu",
-                                                                    "Fri",
-                                                                    "Sat",
-                                                                    "Sun",
-                                                                ][index]
+                                                                analyticsWeekDays[index]
                                                             }
-                                                        </Text>
+                                                            : {
+                                                                height
+                                                            }%
+                                                        </Tooltip.Content>
 
-                                                    </Box>
+                                                    </Tooltip.Positioner>
 
-                                                </Tooltip.Trigger>
-
-                                                <Tooltip.Positioner>
-
-                                                    <Tooltip.Content
-                                                        bg="#111827"
-                                                        color="white"
-                                                        borderRadius="xl"
-                                                        px={3}
-                                                        py={1.5}
-                                                        fontSize="xs"
-                                                    >
-                                                        {
-                                                            analyticsWeekDays[index]
-                                                        }
-                                                        : {
-                                                            height
-                                                        }%
-                                                    </Tooltip.Content>
-
-                                                </Tooltip.Positioner>
-
-                                            </Tooltip.Root>
-                                        )
+                                                </Tooltip.Root>
+                                            );
+                                        }
                                     )}
 
                                 </HStack>
@@ -2170,7 +2372,7 @@ const Dashboard = () => {
 
                     <VStack
                         align="stretch"
-                        gap={6}
+                        gap={5}
                         mb={8}
                     >
 
@@ -2179,26 +2381,52 @@ const Dashboard = () => {
 
                                 <Box
                                     key={item.label}
+                                    p={4}
+                                    borderRadius="2xl"
+                                    bg="rgba(148,163,184,0.04)"
+                                    _dark={{
+                                        bg: "rgba(148,163,184,0.06)",
+                                    }}
+                                    transition="0.2s"
+                                    _hover={{
+                                        bg: "rgba(148,163,184,0.08)",
+                                    }}
                                 >
 
                                     <Flex
                                         justify="space-between"
+                                        align="center"
                                         mb={3}
                                     >
 
-                                        <Text
-                                            color="#64748B"
-                                            _dark={{
-                                                color:
-                                                    "#94A3B8",
-                                            }}
-                                        >
-                                            {
-                                                item.label
-                                            }
-                                        </Text>
+                                        <HStack gap={2}>
+
+                                            <Box
+                                                w="8px"
+                                                h="8px"
+                                                borderRadius="full"
+                                                bg={item.color}
+                                                boxShadow={`0 0 8px ${item.color}66`}
+                                            />
+
+                                            <Text
+                                                fontSize="sm"
+                                                fontWeight="500"
+                                                color="#64748B"
+                                                _dark={{
+                                                    color:
+                                                        "#94A3B8",
+                                                }}
+                                            >
+                                                {
+                                                    item.label
+                                                }
+                                            </Text>
+
+                                        </HStack>
 
                                         <Text
+                                            fontSize="lg"
                                             fontWeight="700"
                                             color={item.color}
                                         >
@@ -2210,21 +2438,21 @@ const Dashboard = () => {
                                     </Flex>
 
                                     <Box
-                                        h="10px"
+                                        h="8px"
                                         borderRadius="full"
                                         overflow="hidden"
                                         bg="rgba(99,102,241,0.08)"
                                         _dark={{
-                                            bg: "rgba(99,102,241,0.12)",
+                                            bg: "rgba(99,102,241,0.14)",
                                         }}
                                     >
 
                                         <Box
                                             h="full"
                                             w={item.value}
-                                            bg={item.color}
+                                            bg={`linear-gradient(90deg, ${item.color}CC, ${item.color})`}
                                             borderRadius="full"
-                                            transition="0.3s"
+                                            transition="0.5s cubic-bezier(0.4, 0, 0.2, 1)"
                                         />
 
                                     </Box>
