@@ -3,6 +3,7 @@
 import {
     useCallback,
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -63,8 +64,6 @@ export const getWeekBounds = () => {
 
 const useHabits = (
     params?: {
-        from?: string;
-        to?: string;
         search?: string;
     }
 ) => {
@@ -89,6 +88,8 @@ const useHabits = (
     const [error, setError] =
         useState<Error | null>(null);
 
+    const hasRun = useRef(false);
+
     // ========================================
     // FETCH
     // ========================================
@@ -102,19 +103,9 @@ const useHabits = (
 
             try {
 
-                const week =
-                    getWeekBounds();
-
                 const queryParams:
                     Record<string, string> =
-                    {
-                        from:
-                            params?.from ??
-                            week.from,
-                        to:
-                            params?.to ??
-                            week.to,
-                    };
+                    {};
 
                 if (params?.search) {
 
@@ -148,8 +139,6 @@ const useHabits = (
         },
         [
             axiosRequest,
-            params?.from,
-            params?.to,
             params?.search,
         ]
     );
@@ -160,7 +149,15 @@ const useHabits = (
 
     useEffect(() => {
 
+        if (hasRun.current) {
+
+            return;
+        }
+
+        hasRun.current = true;
+
         fetch();
+
     }, [fetch]);
 
     // ========================================

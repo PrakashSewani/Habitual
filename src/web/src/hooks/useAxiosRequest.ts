@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import {
+    useEffect,
+    useRef,
+} from "react";
 
 import axios from "axios";
 
@@ -8,7 +11,6 @@ import axiosRequest
     from "../api/axios";
 
 import {
-    usePathname,
     useRouter,
 } from "next/navigation";
 
@@ -17,6 +19,14 @@ import {
 } from "react-toastify";
 
 let isRedirecting = false;
+
+let requestInterceptorId:
+    number | null = null;
+
+let responseInterceptorId:
+    number | null = null;
+
+let hookMountCount = 0;
 
 const useAxiosRequest = () => {
 
@@ -27,8 +37,10 @@ const useAxiosRequest = () => {
     const router =
         useRouter();
 
-    const pathname =
-        usePathname();
+    const routerRef =
+        useRef(router);
+
+    routerRef.current = router;
 
     // ========================================
     // EFFECT
@@ -36,11 +48,27 @@ const useAxiosRequest = () => {
 
     useEffect(() => {
 
+        hookMountCount++;
+
+        // ========================================
+        // ONLY REGISTER ONCE
+        // ========================================
+
+        if (
+            hookMountCount > 1
+        ) {
+
+            return () => {
+
+                hookMountCount--;
+            };
+        }
+
         // ========================================
         // REQUEST INTERCEPTOR
         // ========================================
 
-        const requestInterceptor =
+        requestInterceptorId =
             axiosRequest.interceptors.request.use(
 
                 config => {
@@ -70,7 +98,7 @@ const useAxiosRequest = () => {
         // RESPONSE INTERCEPTOR
         // ========================================
 
-        const responseInterceptor =
+        responseInterceptorId =
             axiosRequest.interceptors.response.use(
 
                 // ========================================
@@ -192,7 +220,11 @@ const useAxiosRequest = () => {
                                 sessionStorage.clear();
 
                                 if (
-                                    pathname !== "/login" &&
+                                    typeof window !==
+                                    "undefined" &&
+                                    window.location
+                                        .pathname !==
+                                    "/login" &&
                                     !isRedirecting
                                 ) {
 
@@ -202,7 +234,7 @@ const useAxiosRequest = () => {
                                         "Please login to continue."
                                     );
 
-                                    router.replace(
+                                    routerRef.current.replace(
                                         "/login"
                                     );
 
@@ -255,7 +287,11 @@ const useAxiosRequest = () => {
                             sessionStorage.clear();
 
                             if (
-                                pathname !== "/login" &&
+                                typeof window !==
+                                "undefined" &&
+                                window.location
+                                    .pathname !==
+                                "/login" &&
                                 !isRedirecting
                             ) {
 
@@ -291,7 +327,7 @@ const useAxiosRequest = () => {
                                     );
                                 }
 
-                                router.replace(
+                                routerRef.current.replace(
                                     "/login"
                                 );
 
@@ -346,18 +382,41 @@ const useAxiosRequest = () => {
 
         return () => {
 
-            axiosRequest.interceptors
-                .request.eject(
-                    requestInterceptor
-                );
+            hookMountCount--;
 
-            axiosRequest.interceptors
-                .response.eject(
-                    responseInterceptor
-                );
+            if (
+                hookMountCount === 0
+            ) {
+
+                if (
+                    requestInterceptorId !==
+                    null
+                ) {
+
+                    axiosRequest.interceptors
+                        .request.eject(
+                            requestInterceptorId
+                        );
+
+                    requestInterceptorId = null;
+                }
+
+                if (
+                    responseInterceptorId !==
+                    null
+                ) {
+
+                    axiosRequest.interceptors
+                        .response.eject(
+                            responseInterceptorId
+                        );
+
+                    responseInterceptorId = null;
+                }
+            }
         };
 
-    }, [pathname, router]);
+    }, []);
 
     // ========================================
     // RETURN

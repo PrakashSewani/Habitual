@@ -2,6 +2,7 @@
 
 import {
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -32,7 +33,16 @@ const useAuthenticateUser = () => {
     const [loading, setLoading] =
         useState(true);
 
+    const hasRun = useRef(false);
+
     useEffect(() => {
+
+        if (hasRun.current) {
+
+            return;
+        }
+
+        hasRun.current = true;
 
         const authenticateUser =
             async () => {

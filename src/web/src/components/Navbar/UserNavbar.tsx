@@ -147,45 +147,49 @@ const UserNavbar = ({
 
                     {/* PREMIUM */}
 
-                    <HStack
-                        gap={2}
-                        cursor="pointer"
-                    >
+                    <Link href="/analytics">
 
-                        <Text
-                            fontWeight="500"
-                            color="#64748B"
-                            transition="0.2s"
-                            _hover={{
-                                color: "#6366F1",
-                            }}
-                            _dark={{
-                                color: "#94A3B8",
-                            }}
+                        <HStack
+                            gap={2}
+                            cursor="pointer"
                         >
-                            Deep Analytics
-                        </Text>
 
-                        <Badge
-                            px={2}
-                            py={1}
-                            borderRadius="full"
-                            bg="
-                                linear-gradient(
-                                    135deg,
-                                    #6366F1,
-                                    #8B5CF6
-                                )
-                            "
-                            color="white"
-                            fontSize="10px"
-                            textTransform="uppercase"
-                            letterSpacing="0.08em"
-                        >
-                            PRO
-                        </Badge>
+                            <Text
+                                fontWeight="500"
+                                color="#64748B"
+                                transition="0.2s"
+                                _hover={{
+                                    color: "#6366F1",
+                                }}
+                                _dark={{
+                                    color: "#94A3B8",
+                                }}
+                            >
+                                Deep Analytics
+                            </Text>
 
-                    </HStack>
+                            <Badge
+                                px={2}
+                                py={1}
+                                borderRadius="full"
+                                bg="
+                                    linear-gradient(
+                                        135deg,
+                                        #6366F1,
+                                        #8B5CF6
+                                    )
+                                "
+                                color="white"
+                                fontSize="10px"
+                                textTransform="uppercase"
+                                letterSpacing="0.08em"
+                            >
+                                PRO
+                            </Badge>
+
+                        </HStack>
+
+                    </Link>
 
                 </HStack>
 
