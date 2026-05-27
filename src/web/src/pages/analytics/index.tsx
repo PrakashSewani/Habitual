@@ -29,6 +29,9 @@ import Link
 import UserNavbar
     from "@/components/Navbar/UserNavbar";
 
+import Footer
+    from "@/components/Footer";
+
 import useAuthenticateUser
     from "@/hooks/useAuthenticateUser";
 
@@ -46,6 +49,9 @@ import {
     addDays,
     getDateKey,
 } from "@/lib/analytics";
+
+import MiniCalendar
+    from "@/components/MiniCalendar";
 
 const StatPill = ({
     icon,
@@ -767,8 +773,7 @@ const AnalyticsPage = () => {
 
     return (
         <Box
-            h="100dvh"
-            overflow="hidden"
+            minH="100dvh"
             display="flex"
             flexDirection="column"
             bg="#FAFAFF"
@@ -788,9 +793,8 @@ const AnalyticsPage = () => {
                     md: 8,
                     lg: 10,
                 }}
-                pt={6}
+                pt={{ base: 6, md: 8 }}
                 pb={4}
-                flexShrink={0}
             >
                 <HStack
                     gap={4}
@@ -849,8 +853,6 @@ const AnalyticsPage = () => {
             </Box>
 
             <Box
-                flex="1"
-                overflowY="auto"
                 px={{
                     base: 4,
                     md: 8,
@@ -1005,20 +1007,40 @@ const AnalyticsPage = () => {
                         )}
                     </VStack>
 
-                    <Box>
-                        {isLoading ? (
-                            <Skeleton
-                                h="400px"
-                                borderRadius="2xl"
-                            />
-                        ) : (
-                            <HabitRankings
-                                stats={habitStats}
-                            />
-                        )}
-                    </Box>
+                    <VStack
+                        gap={6}
+                        align="stretch"
+                    >
+                        <Box>
+                            {isLoading ? (
+                                <Skeleton
+                                    h="400px"
+                                    borderRadius="2xl"
+                                />
+                            ) : (
+                                <HabitRankings
+                                    stats={habitStats}
+                                />
+                            )}
+                        </Box>
+
+                        <Box>
+                            {isLoading ? (
+                                <Skeleton
+                                    h="260px"
+                                    borderRadius="2xl"
+                                />
+                            ) : (
+                                <MiniCalendar
+                                    habits={habits}
+                                />
+                            )}
+                        </Box>
+                    </VStack>
                 </Grid>
             </Box>
+
+            <Footer />
         </Box>
     );
 };

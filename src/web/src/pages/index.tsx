@@ -2,6 +2,8 @@
 
 import MarketingNavbar from "@/components/Navbar/MarketingNavbar";
 
+import Footer from "@/components/Footer";
+
 import {
   Badge,
   Box,
@@ -826,54 +828,7 @@ const HomePage = () => {
         </VStack>
       </Container>
 
-      {/* FOOTER */}
-      <Box
-        borderTop="1px solid"
-        borderColor="rgba(148,163,184,0.16)"
-        _dark={{
-          borderColor:
-            "rgba(255,255,255,0.06)",
-        }}
-        py={12}
-      >
-        <Container
-          maxW="7xl"
-        >
-          <Flex
-            justify="space-between"
-            align="center"
-            flexWrap="wrap"
-            gap={6}
-          >
-            <HStack gap={3}>
-              <Box
-                w="10px"
-                h="10px"
-                borderRadius="full"
-                bg="#6366F1"
-              />
-              <Text
-                fontWeight="700"
-                color="#0F172A"
-                _dark={{
-                  color:
-                    "#F8FAFC",
-                }}
-              >
-                Habitual
-              </Text>
-            </HStack>
-
-            <Text
-              fontSize="sm"
-              color="#94A3B8"
-            >
-              Built for people who
-              show up.
-            </Text>
-          </Flex>
-        </Container>
-      </Box>
+      <Footer />
     </Box>
   );
 };

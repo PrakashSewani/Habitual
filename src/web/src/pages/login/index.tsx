@@ -25,6 +25,8 @@ import { useState } from "react";
 
 import LoginNavbar from "@/components/Navbar/LoginNavbar";
 
+import Footer from "@/components/Footer";
+
 import useAxiosRequest from "@/hooks/useAxiosRequest";
 
 import { useRouter } from "next/router";
@@ -732,6 +734,8 @@ Password must contain at least:
 
                 </Flex>
             </Flex>
+
+            <Footer />
         </Box>
     );
 };
