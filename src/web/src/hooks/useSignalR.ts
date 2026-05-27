@@ -16,8 +16,9 @@ export type HabitLogUpdatedPayload = {
     completed: boolean;
 };
 
-const HUB_URL =
-    "https://localhost:7224/hubs/habits";
+import { SIGNALR_HUB_URL } from "../config/api";
+
+const HUB_URL = SIGNALR_HUB_URL;
 
 const useSignalR = () => {
 

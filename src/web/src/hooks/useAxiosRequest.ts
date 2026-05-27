@@ -10,6 +10,8 @@ import axios from "axios";
 import axiosRequest
     from "../api/axios";
 
+import { API_AUTH_REFRESH } from "../config/api";
+
 import {
     useRouter,
 } from "next/navigation";
@@ -252,7 +254,7 @@ const useAxiosRequest = () => {
 
                             const response =
                                 await axios.post(
-                                    "https://localhost:7224/api/auth/refresh",
+                                    API_AUTH_REFRESH,
                                     {
                                         refreshToken,
                                     }

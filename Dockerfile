@@ -26,8 +26,11 @@ WORKDIR /app
 # Copy published output from build stage
 COPY --from=build /app/publish .
 
+# Use the HTTP port from launchSettings.json
+ENV ASPNETCORE_URLS=http://+:5224
+
 # Expose the port the API listens on
-EXPOSE 8080
+EXPOSE 5224
 
 # Start the application
 ENTRYPOINT ["dotnet", "WebApi.dll"]
