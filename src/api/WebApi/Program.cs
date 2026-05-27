@@ -1,5 +1,6 @@
 using Application;
 using Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using WebApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,5 +43,11 @@ app.MapControllers();
 app.UseWebSockets();
 
 app.MapSignalRHubs();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<Infrastructure.Context.AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();
