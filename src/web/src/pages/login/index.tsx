@@ -161,7 +161,9 @@ Password must contain at least:
 
     return (
         <Box
-            minH="100vh"
+            h="100vh"
+            display="flex"
+            flexDirection="column"
             position="relative"
             overflow="hidden"
             bg="#FAFAFF"
@@ -209,14 +211,16 @@ Password must contain at least:
             ======================================== */}
 
             <Flex
-                minH="calc(100vh - 72px)"
+                flex="1"
+                minH="0"
                 px={{
                     base: 6,
                     md: 12,
                 }}
-                py={10}
+                py={3}
                 align="center"
                 justify="center"
+                overflow="auto"
             >
 
                 <Flex
@@ -410,7 +414,7 @@ Password must contain at least:
                             maxW="480px"
                             p={{
                                 base: 8,
-                                md: 12,
+                                md: 10,
                             }}
                             borderRadius="3xl"
                             border="1px solid"
@@ -433,7 +437,7 @@ Password must contain at least:
                             <VStack
                                 align="start"
                                 gap={3}
-                                mb={10}
+                                mb={8}
                             >
 
                                 <Heading
@@ -467,7 +471,7 @@ Password must contain at least:
                             {/* FORM */}
 
                             <VStack
-                                gap={6}
+                                gap={5}
                                 align="stretch"
                             >
 
@@ -692,8 +696,8 @@ Password must contain at least:
                             {/* FOOTER */}
 
                             <VStack
-                                mt={10}
-                                pt={8}
+                                mt={8}
+                                pt={6}
                                 borderTop="1px solid"
                                 borderColor="
                                     rgba(99,102,241,0.08)
