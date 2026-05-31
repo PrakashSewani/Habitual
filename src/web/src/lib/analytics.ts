@@ -3,6 +3,10 @@ import {
     HabitLog,
 } from "@/types/habit";
 
+import {
+    isScheduleActiveForDate,
+} from "@/lib/schedule";
+
 // ========================================
 // DATE HELPERS
 // ========================================
@@ -54,6 +58,8 @@ export const addDays = (
 
 export const computeCurrentStreak = (
     logs: HabitLog[],
+    schedule: Habit["schedule"],
+    createdAt: string,
     upTo: Date = new Date()
 ): number => {
 
@@ -65,13 +71,20 @@ export const computeCurrentStreak = (
 
     let cursor = new Date(upTo);
 
-    while (
-        logSet.has(
-            getDateKey(cursor)
-        )
-    ) {
+    const created = new Date(createdAt);
+    const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
 
-        streak++;
+    while (cursor >= createdDate) {
+
+        const dateStr = getDateKey(cursor);
+
+        if (isScheduleActiveForDate(schedule, createdAt, dateStr)) {
+            if (logSet.has(dateStr)) {
+                streak++;
+            } else {
+                break;
+            }
+        }
 
         cursor = addDays(
             cursor,
@@ -83,7 +96,9 @@ export const computeCurrentStreak = (
 };
 
 export const computeLongestStreak = (
-    logs: HabitLog[]
+    logs: HabitLog[],
+    schedule: Habit["schedule"],
+    createdAt: string
 ): number => {
 
     if (
@@ -91,48 +106,33 @@ export const computeLongestStreak = (
     )
         return 0;
 
-    const sorted = [
-        ...new Set(
-            logs.map(l => l.date)
-        ),
-    ].sort();
+    const logSet = new Set(
+        logs.map(l => l.date)
+    );
 
-    let maxStreak = 1;
+    const created = new Date(createdAt);
+    const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+    const today = new Date();
 
-    let current = 1;
+    let maxStreak = 0;
+    let current = 0;
 
-    for (
-        let i = 1;
-        i < sorted.length;
-        i++
-    ) {
+    let cursor = new Date(createdDate);
 
-        const prev = parseDateKey(
-            sorted[i - 1]
-        );
+    while (cursor <= today) {
 
-        const curr = parseDateKey(
-            sorted[i]
-        );
+        const dateStr = getDateKey(cursor);
 
-        const diff =
-            (curr.getTime() -
-                prev.getTime()) /
-            (1000 * 60 * 60 * 24);
-
-        if (diff === 1) {
-
-            current++;
-
-            maxStreak = Math.max(
-                maxStreak,
-                current
-            );
+        if (isScheduleActiveForDate(schedule, createdAt, dateStr)) {
+            if (logSet.has(dateStr)) {
+                current++;
+                maxStreak = Math.max(maxStreak, current);
+            } else {
+                current = 0;
+            }
         }
-        else {
 
-            current = 1;
-        }
+        cursor = addDays(cursor, 1);
     }
 
     return maxStreak;
@@ -326,12 +326,16 @@ export const getHabitStats = (
 
         const currentStreak =
             computeCurrentStreak(
-                habit.habitLogs
+                habit.habitLogs,
+                habit.schedule,
+                habit.createdAt
             );
 
         const longestStreak =
             computeLongestStreak(
-                habit.habitLogs
+                habit.habitLogs,
+                habit.schedule,
+                habit.createdAt
             );
 
         const thisWeekLogs =
@@ -417,7 +421,9 @@ export const getGlobalStats = (
         0,
         ...habits.map(h =>
             computeLongestStreak(
-                h.habitLogs
+                h.habitLogs,
+                h.schedule,
+                h.createdAt
             )
         )
     );

@@ -13,6 +13,10 @@ import {
     Habit,
 } from "@/types/habit";
 
+import {
+    isHabitScheduledForDate,
+} from "@/lib/schedule";
+
 // ========================================
 // HELPERS
 // ========================================
@@ -36,8 +40,6 @@ const getMonthDays = (
             ((leadingEmpty + daysInMonth) % 7)) %
         7;
 
-    const totalHabits = habits.length;
-
     const days: (
         | {
             date: string;
@@ -55,7 +57,11 @@ const getMonthDays = (
         const dateStr =
             `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-        const completed = habits.reduce(
+        const dayScheduled = habits.filter(h =>
+            isHabitScheduledForDate(h, dateStr)
+        );
+
+        const completed = dayScheduled.reduce(
             (sum, h) =>
                 sum +
                 (h.habitLogs.some(
@@ -67,9 +73,9 @@ const getMonthDays = (
         );
 
         const rate =
-            totalHabits > 0
+            dayScheduled.length > 0
                 ? Math.round(
-                    (completed / totalHabits) *
+                    (completed / dayScheduled.length) *
                     100
                 )
                 : 0;

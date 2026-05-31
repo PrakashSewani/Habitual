@@ -71,6 +71,11 @@ import {
     computeLongestStreak,
 } from "@/lib/analytics";
 
+import {
+    isHabitScheduledForDate,
+    getScheduleLabel,
+} from "@/lib/schedule";
+
 // ========================================
 // COMPONENT
 // ========================================
@@ -287,10 +292,15 @@ const Dashboard = () => {
         };
     };
 
-    const totalHabits = habits.length;
+    const scheduledHabits =
+        habits.filter(h =>
+            isHabitScheduledForDate(h, selectedDate)
+        );
+
+    const totalHabits = scheduledHabits.length;
 
     const completedSelectedDate =
-        habits.filter(h =>
+        scheduledHabits.filter(h =>
             h.habitLogs.some(
                 l => l.date === selectedDate
             )
@@ -331,8 +341,12 @@ const Dashboard = () => {
             () =>
                 analyticsWeekDays.map(
                     day => {
+                        const dayScheduled =
+                            habits.filter(h =>
+                                isHabitScheduledForDate(h, day)
+                            );
                         const completed =
-                            habits.reduce(
+                            dayScheduled.reduce(
                                 (sum, h) =>
                                     sum +
                                     (h.habitLogs.some(
@@ -342,16 +356,16 @@ const Dashboard = () => {
                                         : 0),
                                 0
                             );
-                        return totalHabits > 0
+                        return dayScheduled.length > 0
                             ? Math.round(
                                 (completed /
-                                    totalHabits) *
+                                    dayScheduled.length) *
                                 100
                             )
                             : 0;
                     }
                 ),
-            [habits, analyticsWeekDays, totalHabits]
+            [habits, analyticsWeekDays]
         );
 
     const shiftWeek = (
@@ -412,24 +426,34 @@ const Dashboard = () => {
 
     const computeConsistency = () => {
         const allDates = new Set<string>();
-        habits.forEach(h =>
-            h.habitLogs.forEach(l =>
-                allDates.add(l.date)
-            )
-        );
+        habits.forEach(h => {
+            const created = new Date(h.createdAt);
+            const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+            const today = new Date();
+            const cursor = new Date(createdDate);
+            while (cursor <= today) {
+                const dateStr = formatDate(cursor);
+                if (isHabitScheduledForDate(h, dateStr)) {
+                    allDates.add(dateStr);
+                }
+                cursor.setDate(cursor.getDate() + 1);
+            }
+        });
         const sorted = Array.from(allDates).sort();
         let maxStreak = 0;
         let current = 0;
         for (let i = 0; i < sorted.length; i++) {
-            const completed =
-                habits.filter(h =>
-                    h.habitLogs.some(
-                        l => l.date === sorted[i]
-                    )
-                ).length;
+            const dayScheduled = habits.filter(h =>
+                isHabitScheduledForDate(h, sorted[i])
+            );
+            const completed = dayScheduled.filter(h =>
+                h.habitLogs.some(
+                    l => l.date === sorted[i]
+                )
+            ).length;
             const rate =
-                habits.length > 0
-                    ? completed / habits.length
+                dayScheduled.length > 0
+                    ? completed / dayScheduled.length
                     : 0;
             if (rate >= 1) {
                 current++;
@@ -455,7 +479,9 @@ const Dashboard = () => {
             0,
             ...habits.map(h =>
                 computeLongestStreak(
-                    h.habitLogs
+                    h.habitLogs,
+                    h.schedule,
+                    h.createdAt
                 )
             )
         );
@@ -465,10 +491,16 @@ const Dashboard = () => {
         if (habits.length === 0) return null;
 
         const habitRates = habits.map(h => {
-            const done = analyticsWeekDays.filter(d =>
+            const scheduledDays = analyticsWeekDays.filter(d =>
+                isHabitScheduledForDate(h, d)
+            );
+            const done = scheduledDays.filter(d =>
                 h.habitLogs.some(l => l.date === d)
             ).length;
-            return { habit: h, rate: Math.round((done / 7) * 100) };
+            const rate = scheduledDays.length > 0
+                ? Math.round((done / scheduledDays.length) * 100)
+                : 0;
+            return { habit: h, rate };
         });
 
         const sorted = [...habitRates].sort((a, b) => b.rate - a.rate);
@@ -483,7 +515,10 @@ const Dashboard = () => {
         const lastWeekAvg = lastWeekDays.length > 0
             ? Math.round(
                 lastWeekDays.reduce((sum, day) => {
-                    const completed = habits.reduce(
+                    const dayScheduled = habits.filter(h =>
+                        isHabitScheduledForDate(h, day)
+                    );
+                    const completed = dayScheduled.reduce(
                         (s, h) =>
                             s +
                             (h.habitLogs.some(l => l.date === day)
@@ -493,8 +528,8 @@ const Dashboard = () => {
                     );
                     return (
                         sum +
-                        (habits.length > 0
-                            ? (completed / habits.length) * 100
+                        (dayScheduled.length > 0
+                            ? (completed / dayScheduled.length) * 100
                             : 0)
                     );
                 }, 0) / 7
@@ -537,7 +572,10 @@ const Dashboard = () => {
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr =
                     `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                const completed = habits.reduce(
+                const dayScheduled = habits.filter(h =>
+                    isHabitScheduledForDate(h, dateStr)
+                );
+                const completed = dayScheduled.reduce(
                     (sum, h) =>
                         sum +
                         (h.habitLogs.some(
@@ -548,9 +586,9 @@ const Dashboard = () => {
                     0
                 );
                 const rate =
-                    totalHabits > 0
+                    dayScheduled.length > 0
                         ? Math.round(
-                            (completed / totalHabits) *
+                            (completed / dayScheduled.length) *
                             100
                         )
                         : 0;
@@ -565,7 +603,7 @@ const Dashboard = () => {
             }
             return days;
         },
-        [habits, totalHabits]
+        [habits]
     );
 
     const monthlyDays =
@@ -622,7 +660,9 @@ const Dashboard = () => {
         habit: typeof habits[0]
     ) => {
         const streak = computeLongestStreak(
-            habit.habitLogs
+            habit.habitLogs,
+            habit.schedule,
+            habit.createdAt
         );
         if (streak === 0) return null;
         return `${streak}d best`;
@@ -1162,52 +1202,58 @@ const Dashboard = () => {
 
                 {!habitsLoading && habits.length > 0 && (
                     <VStack align="stretch" gap={4} mb={16}>
-                        {habits.map(habit => {
-                            const isCompleted =
-                                habit.habitLogs.some(
-                                    l => l.date === selectedDate
-                                );
-                            const scheduleColors =
-                                scheduleTypeColor(
-                                    habit.schedule.type
-                                );
-                            const isToggling =
-                                togglingIds.has(habit.id);
-                            const sparkline =
-                                getHabitSparkline(habit, 14);
-                            const streakText =
-                                getHabitStreakText(habit);
+                        {habits
+                            .filter(habit =>
+                                isHabitScheduledForDate(habit, selectedDate)
+                            )
+                            .map(habit => {
+                                const isCompleted =
+                                    habit.habitLogs.some(
+                                        l => l.date === selectedDate
+                                    );
+                                const scheduleColors =
+                                    scheduleTypeColor(
+                                        habit.schedule.type
+                                    );
+                                const isToggling =
+                                    togglingIds.has(habit.id);
+                                const sparkline =
+                                    getHabitSparkline(habit, 14);
+                                const streakText =
+                                    getHabitStreakText(habit);
+                                const scheduleLabel =
+                                    getScheduleLabel(habit.schedule);
 
-                            return (
-                                <Flex
-                                    key={habit.id}
-                                    align="center"
-                                    gap={4}
-                                    p={4}
-                                    borderRadius="2xl"
-                                    border="1px solid"
-                                    borderColor={
-                                        isCompleted
-                                            ? "rgba(16,185,129,0.20)"
-                                            : "rgba(148,163,184,0.14)"
-                                    }
-                                    bg={
-                                        isCompleted
-                                            ? "rgba(16,185,129,0.03)"
-                                            : "white"
-                                    }
-                                    _dark={{
-                                        bg: isCompleted
-                                            ? "rgba(16,185,129,0.05)"
-                                            : "#111827",
-                                    }}
-                                    transition="0.2s"
-                                    _hover={{
-                                        borderColor: isCompleted
-                                            ? "rgba(16,185,129,0.30)"
-                                            : "rgba(99,102,241,0.25)",
-                                    }}
-                                >
+                                return (
+                                    <Flex
+                                        key={habit.id}
+                                        align="center"
+                                        gap={4}
+                                        p={4}
+                                        borderRadius="2xl"
+                                        border="1px solid"
+                                        borderColor={
+                                            isCompleted
+                                                ? "rgba(16,185,129,0.20)"
+                                                : "rgba(148,163,184,0.14)"
+                                        }
+                                        bg={
+                                            isCompleted
+                                                ? "rgba(16,185,129,0.03)"
+                                                : "white"
+                                        }
+                                        _dark={{
+                                            bg: isCompleted
+                                                ? "rgba(16,185,129,0.05)"
+                                                : "#111827",
+                                        }}
+                                        transition="0.2s"
+                                        _hover={{
+                                            borderColor: isCompleted
+                                                ? "rgba(16,185,129,0.30)"
+                                                : "rgba(99,102,241,0.25)",
+                                        }}
+                                    >
                                     {/* TOGGLE */}
                                     <Tooltip.Root>
                                         <Tooltip.Trigger asChild>
@@ -1305,9 +1351,7 @@ const Dashboard = () => {
                                                 fontSize="9px"
                                                 fontWeight="600"
                                             >
-                                                {scheduleTypeLabel(
-                                                    habit.schedule.type
-                                                )}
+                                                {scheduleLabel}
                                             </Badge>
                                             {streakText && (
                                                 <Text

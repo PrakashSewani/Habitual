@@ -60,7 +60,8 @@ namespace Application.MappingProfiles
 
             CreateMap<HabitLog, GetHabitLogEntryForUserResponse>();
 
-            CreateMap<HabitSchedule, HabitScheduleResponse>();
+            CreateMap<HabitSchedule, HabitScheduleResponse>()
+                .ForMember(dest => dest.IntervalDays, opt => opt.MapFrom(src => src.Interval ?? 0));
         }
     }
 }
