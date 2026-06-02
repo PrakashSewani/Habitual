@@ -2,7 +2,6 @@
 
 import {
     useState,
-    useEffect,
 } from "react";
 
 import {
@@ -177,22 +176,6 @@ const EditHabitDialog = ({
     const axiosRequest = useAxiosRequest();
 
     // ========================================
-    // SYNC ON OPEN
-    // ========================================
-
-    useEffect(() => {
-        if (open) {
-            setName(habit.name);
-            setDescription(habit.description);
-            setIsActive(habit.isActive);
-            setSchedulePreset(getPresetFromSchedule(habit.schedule));
-            setDaysOfWeek(habit.schedule.daysOfWeek?.map(String) ?? []);
-            setIntervalDays(String(habit.schedule.intervalDays || 3));
-            setErrors({});
-        }
-    }, [open, habit]);
-
-    // ========================================
     // HELPERS
     // ========================================
 
@@ -309,7 +292,21 @@ const EditHabitDialog = ({
     // ========================================
 
     return (
-        <Dialog.Root open={open} onOpenChange={details => setOpen(details.open)}>
+        <Dialog.Root
+            open={open}
+            onOpenChange={details => {
+                if (details.open) {
+                    setName(habit.name);
+                    setDescription(habit.description);
+                    setIsActive(habit.isActive);
+                    setSchedulePreset(getPresetFromSchedule(habit.schedule));
+                    setDaysOfWeek(habit.schedule.daysOfWeek?.map(String) ?? []);
+                    setIntervalDays(String(habit.schedule.intervalDays || 3));
+                    setErrors({});
+                }
+                setOpen(details.open);
+            }}
+        >
             <Dialog.Trigger asChild>
                 {trigger}
             </Dialog.Trigger>

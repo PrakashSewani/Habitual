@@ -138,9 +138,15 @@ const useHabits = (
                         .data ?? []
                 );
             }
-            catch (err: any) {
+            catch (err) {
 
-                setError(err);
+                setError(
+                    err instanceof Error
+                        ? err
+                        : new Error(
+                            String(err)
+                        )
+                );
             }
             finally {
 
@@ -149,7 +155,7 @@ const useHabits = (
         },
         [
             axiosRequest,
-            params?.search,
+            params,
         ]
     );
 

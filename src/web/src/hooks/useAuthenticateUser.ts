@@ -110,7 +110,7 @@ const useAuthenticateUser = () => {
 
         authenticateUser();
 
-    }, []);
+    }, [axiosRequest, pathname, router]);
 
     const logout = async () => {
 

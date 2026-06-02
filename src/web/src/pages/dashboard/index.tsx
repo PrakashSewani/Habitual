@@ -275,14 +275,6 @@ const Dashboard = () => {
         setTo(w.to);
     };
 
-    const goToToday = () => {
-        setSearch("");
-        setSelectedDate(todayString);
-        const w = getWeekBounds();
-        setFrom(w.from);
-        setTo(w.to);
-    };
-
     useEffect(() => {
         const timer =
             setInterval(() => {
@@ -408,18 +400,6 @@ const Dashboard = () => {
         setFrom(formatDate(currentFrom));
         setTo(formatDate(currentTo));
         setSelectedDate(formatDate(currentTo));
-    };
-
-    const scheduleTypeLabel = (
-        type: number
-    ) => {
-        const labels: Record<number, string> =
-        {
-            0: "Daily",
-            1: "Weekly",
-            2: "Interval",
-        };
-        return labels[type] ?? "Unknown";
     };
 
     const scheduleTypeColor = (

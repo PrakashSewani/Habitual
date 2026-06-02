@@ -108,8 +108,6 @@ const useSignalR = () => {
                 )
                 .build();
 
-        setConnection(conn);
-
         const start = async () => {
 
             try {
@@ -131,9 +129,11 @@ const useSignalR = () => {
                     "[SignalR] Connected."
                 );
 
+                setConnection(conn);
+
                 setConnected(true);
             }
-            catch (err: any) {
+            catch (err) {
 
                 if (
                     !mountedRef.current
@@ -144,7 +144,9 @@ const useSignalR = () => {
 
                 console.error(
                     "[SignalR] Connection failed:",
-                    err?.message ?? err
+                    err instanceof Error
+                        ? err.message
+                        : String(err)
                 );
 
                 setConnected(false);

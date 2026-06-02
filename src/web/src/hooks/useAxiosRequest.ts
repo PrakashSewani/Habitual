@@ -42,11 +42,13 @@ const useAxiosRequest = () => {
     const routerRef =
         useRef(router);
 
-    routerRef.current = router;
-
     // ========================================
     // EFFECT
     // ========================================
+
+    useEffect(() => {
+        routerRef.current = router;
+    }, [router]);
 
     useEffect(() => {
 
@@ -284,7 +286,7 @@ const useAxiosRequest = () => {
                                 previousRequest
                             );
                         }
-                        catch (refreshError: any) {
+                        catch (refreshError) {
 
                             sessionStorage.clear();
 
@@ -300,8 +302,14 @@ const useAxiosRequest = () => {
                                 isRedirecting = true;
 
                                 const refreshErrors =
-                                    refreshError?.response
-                                        ?.data?.errors;
+                                    (refreshError as {
+                                        response?: {
+                                            data?: {
+                                                errors?:
+                                                    string[];
+                                            };
+                                        };
+                                    })?.response?.data?.errors;
 
                                 // Refresh backend errors
                                 if (

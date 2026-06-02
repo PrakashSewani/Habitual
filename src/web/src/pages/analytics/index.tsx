@@ -46,8 +46,6 @@ import {
     HeatmapDay,
     WeekTrend,
     HabitStat,
-    addDays,
-    getDateKey,
 } from "@/lib/analytics";
 
 import MiniCalendar
