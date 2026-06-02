@@ -72,16 +72,16 @@ namespace Infrastructure.Repositories.Habits
         }
 
         /// <summary>
-        /// Gets a habit by its name. This method takes a habit object as input, retrieves the habit from the database based on its name, and returns it. It ensures that the habit belongs to the specified user before returning it. If the habit is not found or does not belong to the user, appropriate exceptions are thrown. Note that this method is currently not implemented and will throw a NotImplementedException when called.
+        /// Gets a habit by its name. This method takes a habit object as input, retrieves the habit from the database based on its name, and returns it. It ensures that the habit belongs to the specified user before returning it. If the habit is not found or does not belong to the user, appropriate exceptions are thrown.
         /// </summary>
         /// <param name="habit">The Habit object containing the name and user identifier.</param>
+        /// <param name="excludeId">Optional habit ID to exclude from the check (used during updates).</param>
         /// <returns>A boolean indicating whether a habit with the same name already exists for the user.</returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public async Task<bool> GetHabitByNameAsync(Habit habit)
+        public async Task<bool> GetHabitByNameAsync(Habit habit, Guid? excludeId = null)
         {
             var existingHabit = await _context.Habits
                 .AsNoTracking()
-                .FirstOrDefaultAsync(h => h.Name == habit.Name && h.UserId == habit.UserId);
+                .FirstOrDefaultAsync(h => h.Name == habit.Name && h.UserId == habit.UserId && (excludeId == null || h.Id != excludeId));
 
             if (existingHabit != null)
             {
@@ -134,7 +134,7 @@ namespace Infrastructure.Repositories.Habits
                 throw new UnauthorizedAccessException("Requested habit is not tied to current User");
             }
 
-            var doesHabitWithSameNameExists = await GetHabitByNameAsync(habit);
+            var doesHabitWithSameNameExists = await GetHabitByNameAsync(habit, habit.Id);
 
             if (doesHabitWithSameNameExists)
             {

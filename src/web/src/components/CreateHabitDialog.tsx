@@ -573,36 +573,40 @@ const CreateHabitDialog = ({
                                                     <Checkbox.Root
                                                         key={day.value}
                                                         value={day.value}
+                                                        cursor="pointer"
                                                     >
                                                         <Checkbox.HiddenInput />
                                                         <Checkbox.Control
-                                                            display="none"
-                                                        />
-                                                        <Checkbox.Label
-                                                            px={4}
-                                                            py={2.5}
-                                                            borderRadius="full"
-                                                            cursor="pointer"
-                                                            border="1px solid"
-                                                            transition="0.2s"
-                                                            bg={
-                                                                active
-                                                                    ? "#6366F1"
-                                                                    : "transparent"
-                                                            }
-                                                            color={
-                                                                active
-                                                                    ? "white"
-                                                                    : "#64748B"
-                                                            }
+                                                            borderRadius="md"
                                                             borderColor={
                                                                 active
                                                                     ? "#6366F1"
                                                                     : "rgba(148,163,184,0.22)"
                                                             }
+                                                            bg={
+                                                                active
+                                                                    ? "#6366F1"
+                                                                    : "transparent"
+                                                            }
+                                                            color="white"
+                                                            _checked={{
+                                                                bg: "#6366F1",
+                                                                borderColor: "#6366F1",
+                                                            }}
+                                                        >
+                                                            <Checkbox.Indicator />
+                                                        </Checkbox.Control>
+                                                        <Checkbox.Label
+                                                            ml={2}
+                                                            fontSize="sm"
+                                                            color={
+                                                                active
+                                                                    ? "#0F172A"
+                                                                    : "#64748B"
+                                                            }
                                                             _dark={{
                                                                 color: active
-                                                                    ? "white"
+                                                                    ? "#F8FAFC"
                                                                     : "#94A3B8",
                                                             }}
                                                         >
