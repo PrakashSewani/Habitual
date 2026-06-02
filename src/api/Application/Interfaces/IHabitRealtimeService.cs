@@ -11,5 +11,13 @@ namespace Application.Interfaces
         /// <param name="payload">The payload containing the updated habit log information.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         Task BroadcastHabitLogUpdatedAsync(Guid userId, HabitLogUpdatedEvent payload);
+
+        /// <summary>
+        /// Broadcasts a habit update (create, update, delete) to all connected clients for the specified user.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose habit was updated.</param>
+        /// <param name="payload">The payload containing the habit update information.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        Task BroadcastHabitUpdatedAsync(Guid userId, HabitUpdatedEvent payload);
     }
 }

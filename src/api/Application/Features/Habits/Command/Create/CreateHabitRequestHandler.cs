@@ -1,4 +1,7 @@
-﻿using Application.Models.Habits.Create;
+﻿using Application.Interfaces;
+using Application.Models.Habits.Create;
+using Application.Models.Habits.Get;
+using Application.Models.Habits.SignalR;
 using Application.Repositories.Habits;
 using AutoMapper;
 using Domain.Entities.Habits;
@@ -11,10 +14,12 @@ namespace Application.Features.Habits.Command.Create
     /// </summary>
     /// <param name="habitRepository">The repository used to manage habits.</param>
     /// <param name="mapper">The AutoMapper instance used for mapping between models and entities.</param>
-    public class CreateHabitRequestHandler(IHabitRepository habitRepository, IMapper mapper) : IRequestHandler<CreateHabitRequest, CreateHabitResponse>
+    /// <param name="habitRealtimeService">The service used to broadcast habit updates in real-time.</param>
+    public class CreateHabitRequestHandler(IHabitRepository habitRepository, IMapper mapper, IHabitRealtimeService habitRealtimeService) : IRequestHandler<CreateHabitRequest, CreateHabitResponse>
     {
         private readonly IHabitRepository _habitRepository = habitRepository;
         private readonly IMapper _mapper = mapper;
+        private readonly IHabitRealtimeService _habitRealtimeService = habitRealtimeService;
 
         async Task<CreateHabitResponse> IRequestHandler<CreateHabitRequest, CreateHabitResponse>.Handle(CreateHabitRequest request, CancellationToken cancellationToken)
         {
@@ -24,6 +29,15 @@ namespace Application.Features.Habits.Command.Create
             habit.CreatedFrom = request.Source;
 
             var addHabit = await _habitRepository.AddHabitAsync(habit);
+
+            var habitResponse = _mapper.Map<GetHabitForUserResponse>(addHabit);
+
+            await _habitRealtimeService.BroadcastHabitUpdatedAsync(request.UserId, new HabitUpdatedEvent
+            {
+                HabitId = addHabit.Id,
+                Action = "created",
+                Habit = habitResponse
+            });
 
             return _mapper.Map<CreateHabitResponse>(addHabit);
         }

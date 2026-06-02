@@ -15,5 +15,12 @@ namespace WebApi.Services
                 .User(userId.ToString())
                 .SendAsync("HabitLogUpdated", payload);
         }
+
+        public async Task BroadcastHabitUpdatedAsync(Guid userId, HabitUpdatedEvent payload)
+        {
+            await _hubContext.Clients
+                .User(userId.ToString())
+                .SendAsync("HabitUpdated", payload);
+        }
     }
 }

@@ -150,6 +150,36 @@ const UserNavbar = ({
 
                     </Link>
 
+                    <Link href="/habits">
+
+                        <Text
+                            fontWeight={
+                                pathname === "/habits"
+                                    ? "700"
+                                    : "500"
+                            }
+                            color={
+                                pathname === "/habits"
+                                    ? "#6366F1"
+                                    : "#64748B"
+                            }
+                            transition="0.2s"
+                            cursor="pointer"
+                            _hover={{
+                                color: "#6366F1",
+                            }}
+                            _dark={{
+                                color:
+                                    pathname === "/habits"
+                                        ? "#6366F1"
+                                        : "#94A3B8",
+                            }}
+                        >
+                            Habits
+                        </Text>
+
+                    </Link>
+
                     <Link href="/analytics">
 
                         <HStack

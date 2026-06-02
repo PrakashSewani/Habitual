@@ -10,15 +10,35 @@ import {
 import * as signalR
     from "@microsoft/signalr";
 
+import { Habit } from "@/types/habit";
+
+import { SIGNALR_HUB_URL } from "../config/api";
+
+// ========================================
+// TYPES
+// ========================================
+
 export type HabitLogUpdatedPayload = {
     habitId: string;
     date: string;
     completed: boolean;
 };
 
-import { SIGNALR_HUB_URL } from "../config/api";
+export type HabitUpdatedPayload = {
+    habitId: string;
+    action: "created" | "updated" | "deleted";
+    habit: Habit | null;
+};
+
+// ========================================
+// CONFIG
+// ========================================
 
 const HUB_URL = SIGNALR_HUB_URL;
+
+// ========================================
+// HOOK
+// ========================================
 
 const useSignalR = () => {
 
@@ -32,10 +52,18 @@ const useSignalR = () => {
         setConnected,
     ] = useState(false);
 
-    const listenersRef = useRef<
+    const logListenersRef = useRef<
         Set<
             (
                 payload: HabitLogUpdatedPayload
+            ) => void
+        >
+    >(new Set());
+
+    const habitListenersRef = useRef<
+        Set<
+            (
+                payload: HabitUpdatedPayload
             ) => void
         >
     >(new Set());
@@ -111,9 +139,6 @@ const useSignalR = () => {
                     !mountedRef.current
                 ) {
 
-                    // Unmounted during start (e.g. React Strict Mode).
-                    // Swallow silently.
-
                     return;
                 }
 
@@ -180,7 +205,7 @@ const useSignalR = () => {
     }, []);
 
     // ========================================
-    // LISTENERS
+    // LISTENERS: HabitLogUpdated
     // ========================================
 
     useEffect(() => {
@@ -199,7 +224,7 @@ const useSignalR = () => {
                 payload
             );
 
-            listenersRef.current.forEach(
+            logListenersRef.current.forEach(
                 cb => cb(payload)
             );
         };
@@ -220,7 +245,47 @@ const useSignalR = () => {
     }, [connection]);
 
     // ========================================
-    // REGISTER
+    // LISTENERS: HabitUpdated
+    // ========================================
+
+    useEffect(() => {
+
+        if (!connection) {
+
+            return;
+        }
+
+        const handler = (
+            payload: HabitUpdatedPayload
+        ) => {
+
+            console.log(
+                "[SignalR] HabitUpdated received:",
+                payload
+            );
+
+            habitListenersRef.current.forEach(
+                cb => cb(payload)
+            );
+        };
+
+        connection.on(
+            "HabitUpdated",
+            handler
+        );
+
+        return () => {
+
+            connection.off(
+                "HabitUpdated",
+                handler
+            );
+        };
+
+    }, [connection]);
+
+    // ========================================
+    // REGISTER: HabitLogUpdated
     // ========================================
 
     const onHabitLogUpdated = useCallback(
@@ -230,13 +295,38 @@ const useSignalR = () => {
             ) => void
         ) => {
 
-            listenersRef.current.add(
+            logListenersRef.current.add(
                 callback
             );
 
             return () => {
 
-                listenersRef.current.delete(
+                logListenersRef.current.delete(
+                    callback
+                );
+            };
+        },
+        []
+    );
+
+    // ========================================
+    // REGISTER: HabitUpdated
+    // ========================================
+
+    const onHabitUpdated = useCallback(
+        (
+            callback: (
+                payload: HabitUpdatedPayload
+            ) => void
+        ) => {
+
+            habitListenersRef.current.add(
+                callback
+            );
+
+            return () => {
+
+                habitListenersRef.current.delete(
                     callback
                 );
             };
@@ -247,6 +337,7 @@ const useSignalR = () => {
     return {
         connected,
         onHabitLogUpdated,
+        onHabitUpdated,
     };
 };
 

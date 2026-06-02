@@ -76,6 +76,8 @@ import {
     getScheduleLabel,
 } from "@/lib/schedule";
 
+import { Habit } from "@/types/habit";
+
 // ========================================
 // COMPONENT
 // ========================================
@@ -206,7 +208,7 @@ const Dashboard = () => {
         }
     };
 
-    const { onHabitLogUpdated } =
+    const { onHabitLogUpdated, onHabitUpdated } =
         useSignalR();
 
     useEffect(() => {
@@ -235,6 +237,27 @@ const Dashboard = () => {
             );
         return unsubscribe;
     }, [onHabitLogUpdated, setHabits]);
+
+    useEffect(() => {
+        const unsubscribe = onHabitUpdated(payload => {
+            setHabits(prev => {
+                if (payload.action === "created" && payload.habit) {
+                    if (prev.some(h => h.id === payload.habitId)) return prev;
+                    return [payload.habit, ...prev];
+                }
+                if (payload.action === "updated" && payload.habit) {
+                    return prev.map(h =>
+                        h.id === payload.habitId ? payload.habit : h
+                    ) as Habit[];
+                }
+                if (payload.action === "deleted") {
+                    return prev.filter(h => h.id !== payload.habitId);
+                }
+                return prev;
+            });
+        });
+        return unsubscribe;
+    }, [onHabitUpdated, setHabits]);
 
     const currentWeekBounds =
         getWeekBounds();
