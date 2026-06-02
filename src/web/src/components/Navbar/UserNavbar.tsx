@@ -379,6 +379,7 @@ const UserNavbar = ({
                                 </Link>
 
                                 <Menu.Item
+                                    disabled
                                     value="premium"
                                     borderRadius="xl"
                                 >
