@@ -1,14 +1,9 @@
-# Build stage: clones remote repository and publishes the API
+# Build stage: uses local source files
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Install git so we can clone the remote repository
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-
-# Clone the specified branch from the remote repository
-ARG REPO_URL=https://github.com/PrakashSewani/Habitual.git
-ARG REPO_BRANCH=dev
-RUN git clone --branch ${REPO_BRANCH} --depth 1 ${REPO_URL} .
+# Copy local source files into the container
+COPY src/api/ ./src/api/
 
 # Restore dependencies
 RUN dotnet restore src/api/WebApi/WebApi.csproj

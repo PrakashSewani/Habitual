@@ -565,37 +565,33 @@ const HabitsPage = () => {
                                     </Box>
 
                                     {/* ACTIONS */}
-                                    <HStack gap={2} flexShrink={0}>
+                                    <HStack gap={1} flexShrink={0} align="center">
                                         {/* ACTIVE TOGGLE */}
                                         <Tooltip.Root>
                                             <Tooltip.Trigger asChild>
-                                                <Box>
-                                                    <Switch.Root
-                                                        checked={habit.isActive}
-                                                        onCheckedChange={() => toggleActive(habit)}
-                                                        disabled={isToggling}
-                                                    >
-                                                        <Switch.HiddenInput />
-                                                        <Switch.Control
-                                                            borderRadius="full"
-                                                            w="40px"
-                                                            h="22px"
-                                                            bg={habit.isActive ? "#10B981" : "rgba(148,163,184,0.30)"}
-                                                            _dark={{ bg: habit.isActive ? "#10B981" : "rgba(148,163,184,0.25)" }}
-                                                            transition="0.2s"
-                                                            opacity={isToggling ? 0.5 : 1}
-                                                        >
-                                                            <Switch.Thumb
-                                                                borderRadius="full"
-                                                                w="18px"
-                                                                h="18px"
-                                                                bg="white"
-                                                                transition="0.2s"
-                                                                transform={habit.isActive ? "translateX(18px)" : "translateX(2px)"}
-                                                            />
-                                                        </Switch.Control>
-                                                    </Switch.Root>
-                                                </Box>
+                                                <IconButton
+                                                    aria-label={habit.isActive ? "Pause habit" : "Resume habit"}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    borderRadius="full"
+                                                    w="36px"
+                                                    h="36px"
+                                                    color={habit.isActive ? "#10B981" : "#94A3B8"}
+                                                    _dark={{ color: habit.isActive ? "#34D399" : "#64748B" }}
+                                                    _hover={{
+                                                        bg: habit.isActive
+                                                            ? "rgba(16,185,129,0.10)"
+                                                            : "rgba(148,163,184,0.10)",
+                                                    }}
+                                                    onClick={() => toggleActive(habit)}
+                                                    loading={isToggling}
+                                                >
+                                                    {habit.isActive ? (
+                                                        <LuCheck size={18} />
+                                                    ) : (
+                                                        <LuCircleCheckBig size={18} />
+                                                    )}
+                                                </IconButton>
                                             </Tooltip.Trigger>
                                             <Tooltip.Positioner>
                                                 <Tooltip.Content
@@ -620,6 +616,8 @@ const HabitsPage = () => {
                                                     size="sm"
                                                     variant="ghost"
                                                     borderRadius="full"
+                                                    w="36px"
+                                                    h="36px"
                                                     color="#64748B"
                                                     _dark={{ color: "#94A3B8" }}
                                                     _hover={{
@@ -627,7 +625,7 @@ const HabitsPage = () => {
                                                         color: "#6366F1",
                                                     }}
                                                 >
-                                                    <LuPencil size={16} />
+                                                    <LuPencil size={18} />
                                                 </IconButton>
                                             }
                                             onSuccess={() => {}}
@@ -641,6 +639,8 @@ const HabitsPage = () => {
                                                     size="sm"
                                                     variant="ghost"
                                                     borderRadius="full"
+                                                    w="36px"
+                                                    h="36px"
                                                     color="#64748B"
                                                     _dark={{ color: "#94A3B8" }}
                                                     _hover={{
@@ -650,7 +650,7 @@ const HabitsPage = () => {
                                                     onClick={() => deleteHabit(habit.id)}
                                                     loading={isDeleting}
                                                 >
-                                                    <LuTrash2 size={16} />
+                                                    <LuTrash2 size={18} />
                                                 </IconButton>
                                             </Tooltip.Trigger>
                                             <Tooltip.Positioner>

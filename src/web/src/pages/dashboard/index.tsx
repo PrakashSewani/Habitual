@@ -317,6 +317,7 @@ const Dashboard = () => {
 
     const scheduledHabits =
         habits.filter(h =>
+            h.isActive &&
             isHabitScheduledForDate(h, selectedDate)
         );
 
@@ -366,6 +367,7 @@ const Dashboard = () => {
                     day => {
                         const dayScheduled =
                             habits.filter(h =>
+                                h.isActive &&
                                 isHabitScheduledForDate(h, day)
                             );
                         const completed =
@@ -448,8 +450,9 @@ const Dashboard = () => {
     };
 
     const computeConsistency = () => {
+        const activeHabits = habits.filter(h => h.isActive);
         const allDates = new Set<string>();
-        habits.forEach(h => {
+        activeHabits.forEach(h => {
             const created = new Date(h.createdAt);
             const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
             const today = new Date();
@@ -466,7 +469,7 @@ const Dashboard = () => {
         let maxStreak = 0;
         let current = 0;
         for (let i = 0; i < sorted.length; i++) {
-            const dayScheduled = habits.filter(h =>
+            const dayScheduled = activeHabits.filter(h =>
                 isHabitScheduledForDate(h, sorted[i])
             );
             const completed = dayScheduled.filter(h =>
@@ -485,10 +488,10 @@ const Dashboard = () => {
                 current = 0;
             }
         }
-        return habits.length > 0
+        return activeHabits.length > 0
             ? Math.round(
                 (maxStreak /
-                    habits.length) *
+                    activeHabits.length) *
                 100
             )
             : 0;
@@ -497,10 +500,11 @@ const Dashboard = () => {
     const consistency = computeConsistency();
 
     const bestStreak = useMemo(() => {
-        if (habits.length === 0) return 0;
+        const activeHabits = habits.filter(h => h.isActive);
+        if (activeHabits.length === 0) return 0;
         return Math.max(
             0,
-            ...habits.map(h =>
+            ...activeHabits.map(h =>
                 computeLongestStreak(
                     h.habitLogs,
                     h.schedule,
@@ -511,9 +515,10 @@ const Dashboard = () => {
     }, [habits]);
 
     const weekInsights = useMemo(() => {
-        if (habits.length === 0) return null;
+        const activeHabits = habits.filter(h => h.isActive);
+        if (activeHabits.length === 0) return null;
 
-        const habitRates = habits.map(h => {
+        const habitRates = activeHabits.map(h => {
             const scheduledDays = analyticsWeekDays.filter(d =>
                 isHabitScheduledForDate(h, d)
             );
@@ -538,7 +543,7 @@ const Dashboard = () => {
         const lastWeekAvg = lastWeekDays.length > 0
             ? Math.round(
                 lastWeekDays.reduce((sum, day) => {
-                    const dayScheduled = habits.filter(h =>
+                    const dayScheduled = activeHabits.filter(h =>
                         isHabitScheduledForDate(h, day)
                     );
                     const completed = dayScheduled.reduce(
@@ -596,6 +601,7 @@ const Dashboard = () => {
                 const dateStr =
                     `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
                 const dayScheduled = habits.filter(h =>
+                    h.isActive &&
                     isHabitScheduledForDate(h, dateStr)
                 );
                 const completed = dayScheduled.reduce(
@@ -1003,7 +1009,8 @@ const Dashboard = () => {
                                 _dark={{ color: "#94A3B8" }}
                             >
                                 {(() => {
-                                    if (habits.length === 0) return "Ready to build something new?";
+                                    const activeHabits = habits.filter(h => h.isActive);
+                                    if (activeHabits.length === 0) return "Ready to build something new?";
                                     if (completionRate === 100) return "All habits complete. A satisfying day.";
                                     if (completionRate > 0) return `${completedSelectedDate} of ${totalHabits} done today. Keep the momentum going.`;
                                     return `${totalHabits} habits waiting. One small step is all it takes.`;
@@ -1227,6 +1234,7 @@ const Dashboard = () => {
                     <VStack align="stretch" gap={4} mb={16}>
                         {habits
                             .filter(habit =>
+                                habit.isActive &&
                                 isHabitScheduledForDate(habit, selectedDate)
                             )
                             .map(habit => {
