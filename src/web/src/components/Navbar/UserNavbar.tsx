@@ -24,7 +24,6 @@ import {
     LuChevronDown,
     LuLogOut,
     LuMoon,
-    LuSettings,
     LuSparkles,
     LuSun,
     LuUser,
@@ -366,21 +365,18 @@ const UserNavbar = ({
                                 }}
                             >
 
-                                <Menu.Item
-                                    value="profile"
-                                    borderRadius="xl"
-                                >
-                                    <LuUser />
-                                    Update Profile
-                                </Menu.Item>
-
-                                <Menu.Item
-                                    value="settings"
-                                    borderRadius="xl"
-                                >
-                                    <LuSettings />
-                                    Preferences
-                                </Menu.Item>
+                                <Link href="/profile" passHref>
+                                    <Menu.Item
+                                        value="profile"
+                                        borderRadius="xl"
+                                        asChild
+                                    >
+                                        <HStack gap={2} cursor="pointer">
+                                            <LuUser />
+                                            <Text>Update Profile</Text>
+                                        </HStack>
+                                    </Menu.Item>
+                                </Link>
 
                                 <Menu.Item
                                     value="premium"

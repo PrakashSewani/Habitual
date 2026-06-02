@@ -13,10 +13,9 @@ namespace Application.Features.Users.Command.Update
     /// <param name="userRepository">The repository used to manage user data.</param>
     /// <param name="passwordHasher">The service used to hash user passwords.</param>
     /// <param name="mapper">The mapper used to map user entities to DTOs.</param>
-    public class UpdateUserRequestHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IMapper mapper) : IRequestHandler<UpdateUserRequest, UpdateUserResponse>
+    public class UpdateUserRequestHandler(IUserRepository userRepository, IMapper mapper) : IRequestHandler<UpdateUserRequest, UpdateUserResponse>
     {
         private readonly IUserRepository _userRepository = userRepository;
-        private readonly IPasswordHasher _passwordHasher = passwordHasher;
         private readonly IMapper _mapper = mapper;
 
         async Task<UpdateUserResponse> IRequestHandler<UpdateUserRequest, UpdateUserResponse>.Handle(UpdateUserRequest request, CancellationToken cancellationToken)
@@ -44,12 +43,6 @@ namespace Application.Features.Users.Command.Update
             if (request.UserRequest.DateOfBirth.HasValue)
             {
                 userInDb.DateOfBirth = (DateOnly)request.UserRequest.DateOfBirth;
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.UserRequest.Password))
-            {
-                userInDb.PasswordHash = _passwordHasher
-                    .HashPassword(request.UserRequest.Password);
             }
 
             userInDb.LastModified = DateTime.UtcNow;

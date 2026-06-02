@@ -4,6 +4,7 @@ using Application.Models.Habits.Update;
 using Application.Models.Users.Create;
 using Application.Models.Users.Get;
 using Application.Models.Users.Update;
+using Application.Models.Users.PasswordUpdate;
 using AutoMapper;
 using Domain.Entities.Habits;
 using Domain.Entities.Users;
@@ -23,6 +24,7 @@ namespace Application.MappingProfiles
             // Domain -> Response
             CreateMap<User, CreateUserResponse>();
             CreateMap<User, UpdateUserResponse>();
+            CreateMap<User, UpdatePasswordResponse>();
             CreateMap<User, GetUserResponse>();
 
             // Request -> Domain

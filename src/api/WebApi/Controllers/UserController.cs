@@ -4,10 +4,12 @@ using Application.Features.Users.Command.Delete;
 using Application.Features.Users.Command.Logout;
 using Application.Features.Users.Command.Refresh;
 using Application.Features.Users.Command.Update;
+using Application.Features.Users.Command.UpdatePassword;
 using Application.Features.Users.Query.Get;
 using Application.Models.Users.Auth;
 using Application.Models.Users.Create;
 using Application.Models.Users.Update;
+using Application.Models.Users.PasswordUpdate;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,6 +79,17 @@ namespace Webapi.Controllers
 
             var resp = await _mediator.Send(new DeleteUserRequest(userId));
             return Ok(ApiResponseFactory.Success(resp, "User deleted successfully"));
+        }
+
+        [HttpPut("password")]
+        public async Task<IActionResult> UpdatePassword(Application.Models.Users.PasswordUpdate.UpdatePassword passwordRequest)
+        {
+            var userIdClaim = (User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("sub")) ?? throw new UnauthorizedAccessException("Invalid token");
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var resp = await _mediator.Send(new UpdatePasswordRequest(userId, passwordRequest));
+            return Ok(ApiResponseFactory.Success(resp, "Password updated successfully"));
         }
 
         [HttpDelete("logout")]
