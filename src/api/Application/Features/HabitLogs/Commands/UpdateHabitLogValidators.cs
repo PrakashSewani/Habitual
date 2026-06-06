@@ -12,6 +12,9 @@ namespace Application.Features.HabitLogs.Commands
                 .NotEmpty().WithMessage("Id is required.");
             RuleFor(x => x.Date)
                .NotEmpty().WithMessage("Date is required.");
+            RuleFor(x => x.Date)
+                .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+                .WithMessage("Cannot log habits for future dates.");
         }
     }
 }

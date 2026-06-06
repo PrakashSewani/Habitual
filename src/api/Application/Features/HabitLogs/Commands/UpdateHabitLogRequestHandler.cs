@@ -22,6 +22,11 @@ namespace Application.Features.HabitLogs.Commands
         {
             var habit = await _habitRepository.GetHabitByIdAsync(request.HabitId, request.UserId);
 
+            if (request.Date > DateOnly.FromDateTime(DateTime.Today))
+            {
+                throw new InvalidOperationException("Cannot log habits for future dates.");
+            }
+
             if (!ScheduleHelper.IsScheduledForDate(habit.Schedule, habit.CreatedAt, request.Date))
             {
                 throw new InvalidOperationException("Habit is not scheduled for this date.");

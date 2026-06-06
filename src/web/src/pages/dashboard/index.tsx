@@ -690,6 +690,7 @@ const Dashboard = () => {
 
     const selectedDateObj = new Date(selectedDate);
     const isToday = selectedDate === todayString;
+    const isFutureDate = selectedDate > todayString;
 
     // ========================================
     // RENDER
@@ -812,6 +813,7 @@ const Dashboard = () => {
                             {weekDays.map((day, index) => {
                                 const sel = day === selectedDate;
                                 const today = day === todayString;
+                                const isFutureDay = day > todayString;
                                 const dd = new Date(day);
                                 const prog = weeklyProgress[index];
                                 const barColor = prog >= 80 ? "#10B981" : prog >= 50 ? "#6366F1" : "#F59E0B";
@@ -824,18 +826,19 @@ const Dashboard = () => {
                                                 gap={3}
                                                 p={3}
                                                 borderRadius="xl"
-                                                cursor="pointer"
+                                                cursor={isFutureDay ? "not-allowed" : "pointer"}
                                                 transition="0.2s"
                                                 bg={sel ? "rgba(99,102,241,0.08)" : "transparent"}
-                                                _hover={{ bg: sel ? "rgba(99,102,241,0.10)" : "rgba(148,163,184,0.06)" }}
+                                                _hover={isFutureDay ? {} : { bg: sel ? "rgba(99,102,241,0.10)" : "rgba(148,163,184,0.06)" }}
                                                 border="1px solid"
                                                 borderColor={sel ? "rgba(99,102,241,0.25)" : "transparent"}
                                                 _dark={{
                                                     borderColor: sel ? "rgba(99,102,241,0.35)" : "transparent",
                                                     bg: sel ? "rgba(99,102,241,0.10)" : "transparent",
-                                                    _hover: { bg: sel ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)" },
+                                                    _hover: isFutureDay ? {} : { bg: sel ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)" },
                                                 }}
-                                                onClick={() => setSelectedDate(day)}
+                                                onClick={() => !isFutureDay && setSelectedDate(day)}
+                                                opacity={isFutureDay ? 0.4 : 1}
                                             >
                                                 <VStack align="center" gap={0} minW="36px">
                                                     <Text
@@ -851,9 +854,9 @@ const Dashboard = () => {
                                                         fontSize="md"
                                                         fontWeight="700"
                                                         lineHeight="1"
-                                                        color={sel ? "#6366F1" : today ? "#10B981" : "#0F172A"}
+                                                        color={sel ? "#6366F1" : today ? "#10B981" : isFutureDay ? "#94A3B8" : "#0F172A"}
                                                         _dark={{
-                                                            color: sel ? "#818CF8" : today ? "#34D399" : "#F8FAFC",
+                                                            color: sel ? "#818CF8" : today ? "#34D399" : isFutureDay ? "#64748B" : "#F8FAFC",
                                                         }}
                                                     >
                                                         {dd.getDate()}
@@ -869,8 +872,8 @@ const Dashboard = () => {
                                                     >
                                                         <Box
                                                             h="full"
-                                                            w={`${prog}%`}
-                                                            bg={prog === 0 ? "transparent" : barColor}
+                                                            w={isFutureDay ? "0%" : `${prog}%`}
+                                                            bg={prog === 0 || isFutureDay ? "transparent" : barColor}
                                                             transition="0.4s cubic-bezier(0.25, 1, 0.5, 1)"
                                                             borderRadius="full"
                                                         />
@@ -885,6 +888,15 @@ const Dashboard = () => {
                                                         flexShrink={0}
                                                     />
                                                 )}
+                                                {isFutureDay && (
+                                                    <Box
+                                                        w="6px"
+                                                        h="6px"
+                                                        borderRadius="full"
+                                                        bg="rgba(148,163,184,0.24)"
+                                                        flexShrink={0}
+                                                    />
+                                                )}
                                             </Flex>
                                         </Tooltip.Trigger>
                                         <Tooltip.Positioner>
@@ -896,7 +908,7 @@ const Dashboard = () => {
                                                 py={1.5}
                                                 fontSize="xs"
                                             >
-                                                {day}: {prog}% completed
+                                                {isFutureDay ? `${day}: Future date` : `${day}: ${prog}% completed`}
                                             </Tooltip.Content>
                                         </Tooltip.Positioner>
                                     </Tooltip.Root>
@@ -1271,13 +1283,15 @@ const Dashboard = () => {
                                             <Box
                                                 as="button"
                                                 aria-label={
-                                                    isCompleted
-                                                        ? "Mark incomplete"
-                                                        : "Mark complete"
+                                                    isFutureDate
+                                                        ? "Cannot log future dates"
+                                                        : isCompleted
+                                                            ? "Mark incomplete"
+                                                            : "Mark complete"
                                                 }
-                                                onClick={() => toggleHabitLog(habit.id)}
-                                                opacity={isToggling ? 0.5 : 1}
-                                                pointerEvents={isToggling ? "none" : "auto"}
+                                                onClick={() => !isFutureDate && toggleHabitLog(habit.id)}
+                                                opacity={isToggling || isFutureDate ? 0.5 : 1}
+                                                pointerEvents={(isToggling || isFutureDate) ? "none" : "auto"}
                                                 w="44px"
                                                 h="44px"
                                                 borderRadius="full"
@@ -1285,7 +1299,7 @@ const Dashboard = () => {
                                                 alignItems="center"
                                                 justifyContent="center"
                                                 flexShrink={0}
-                                                cursor="pointer"
+                                                cursor={isFutureDate ? "not-allowed" : "pointer"}
                                                 transition="0.2s"
                                                 bg={
                                                     isCompleted
@@ -1297,15 +1311,19 @@ const Dashboard = () => {
                                                         ? "white"
                                                         : "#94A3B8"
                                                 }
-                                                _hover={{
-                                                    bg: isCompleted
-                                                        ? "#059669"
-                                                        : "rgba(99,102,241,0.15)",
-                                                    color: isCompleted
-                                                        ? "white"
-                                                        : "#6366F1",
-                                                    transform: "scale(1.05)",
-                                                }}
+                                                _hover={
+                                                    isFutureDate
+                                                        ? {}
+                                                        : {
+                                                            bg: isCompleted
+                                                                ? "#059669"
+                                                                : "rgba(99,102,241,0.15)",
+                                                            color: isCompleted
+                                                                ? "white"
+                                                                : "#6366F1",
+                                                            transform: "scale(1.05)",
+                                                        }
+                                                }
                                                 _dark={{
                                                     bg: isCompleted
                                                         ? "#10B981"
@@ -1331,7 +1349,11 @@ const Dashboard = () => {
                                                 py={1.5}
                                                 fontSize="xs"
                                             >
-                                                {isCompleted ? "Mark incomplete" : "Mark complete"}
+                                                {isFutureDate
+                                                    ? "Cannot log future dates"
+                                                    : isCompleted
+                                                        ? "Mark incomplete"
+                                                        : "Mark complete"}
                                             </Tooltip.Content>
                                         </Tooltip.Positioner>
                                     </Tooltip.Root>

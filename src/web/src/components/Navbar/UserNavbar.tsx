@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
 
 import {
@@ -33,6 +35,8 @@ import {
     useTheme,
 } from "next-themes";
 
+import UpgradeModal from "@/components/UpgradeModal";
+
 type UserNavbarProps = {
     userName?: string;
     currentTime: Date;
@@ -52,7 +56,10 @@ const UserNavbar = ({
         setTheme,
     } = useTheme();
 
+    const [upgradeOpen, setUpgradeOpen] = useState(false);
+
     return (
+        <>
         <Flex
             position="sticky"
             top="0"
@@ -379,9 +386,10 @@ const UserNavbar = ({
                                 </Link>
 
                                 <Menu.Item
-                                    disabled
                                     value="premium"
                                     borderRadius="xl"
+                                    onClick={() => setUpgradeOpen(true)}
+                                    cursor="pointer"
                                 >
                                     <LuSparkles />
                                     Upgrade to Pro
@@ -410,6 +418,9 @@ const UserNavbar = ({
             </HStack>
 
         </Flex>
+
+        <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+        </>
     );
 };
 
