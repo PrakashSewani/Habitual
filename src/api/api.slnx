@@ -1,6 +1,8 @@
 <Solution>
   <Project Path="Application/Application.csproj" />
   <Project Path="Domain/Domain.csproj" />
+  <Project Path="Domain.Tests/Domain.Tests.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
   <Project Path="WebApi/WebApi.csproj" />
+  <Project Path="WebApi.Tests/WebApi.Tests.csproj" />
 </Solution>

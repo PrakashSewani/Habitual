@@ -156,25 +156,6 @@ const useAxiosRequest = () => {
                         );
                     }
 
-                    // ========================================
-                    // SUCCESS TOAST
-                    // ========================================
-
-                    const method =
-                        response.config.method;
-
-                    // Only toast for non-GET requests
-                    if (
-                        method &&
-                        method !== "get" &&
-                        responseData?.message
-                    ) {
-
-                        toast.success(
-                            responseData.message
-                        );
-                    }
-
                     return response;
                 },
 

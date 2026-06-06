@@ -10,11 +10,154 @@ import {
   Heading,
   HStack,
   Skeleton,
+  Spinner,
   Tabs,
   Text,
   Tooltip,
   VStack,
 } from "@chakra-ui/react";
+
+// ========================================
+// SHIMMER LOADING COMPONENTS
+// ========================================
+
+const ShimmerBox = ({ height, width = "100%", borderRadius = "xl", mb = 0, flex = undefined, minW = undefined }: { height: string; width?: string; borderRadius?: string; mb?: number; flex?: number | string; minW?: string }) => (
+  <Box
+    h={height}
+    w={width}
+    borderRadius={borderRadius}
+    mb={mb}
+    flex={flex}
+    minW={minW}
+    bg="rgba(148,163,184,0.12)"
+    _dark={{ bg: "rgba(148,163,184,0.08)" }}
+    overflow="hidden"
+    position="relative"
+    style={{
+      position: "relative",
+    }}
+  >
+    <Box
+      position="absolute"
+      top="0"
+      left="0"
+      right="0"
+      bottom="0"
+      bg="linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)"
+      _dark={{ bg: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }}
+      animation="shimmer 1.5s infinite"
+    />
+    <style>{`
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+    `}</style>
+  </Box>
+);
+
+const HeroStatSkeleton = () => (
+  <Box
+    flex="1"
+    textAlign="center"
+    p={5}
+    borderRadius="2xl"
+    bg="white"
+    border="1px solid"
+    borderColor="rgba(148,163,184,0.14)"
+    _dark={{ bg: "#111827", borderColor: "rgba(255,255,255,0.06)" }}
+    minW="160px"
+  >
+    <Box mx="auto" mb={2} w="40px" h="40px" borderRadius="full" overflow="hidden" position="relative">
+      <ShimmerBox height="40px" width="40px" borderRadius="full" />
+    </Box>
+    <Box mx="auto" mb={1} w="60px" h="28px" borderRadius="md" overflow="hidden" position="relative">
+      <ShimmerBox height="28px" width="60px" borderRadius="md" />
+    </Box>
+    <Box mx="auto" w="80px" h="14px" borderRadius="md" overflow="hidden" position="relative">
+      <ShimmerBox height="14px" width="80px" borderRadius="md" />
+    </Box>
+  </Box>
+);
+
+const HeatmapSkeleton = () => (
+  <VStack gap={3} align="stretch">
+    <HStack gap={3} justify="space-between">
+      <ShimmerBox height="24px" width="120px" borderRadius="md" />
+      <ShimmerBox height="24px" width="80px" borderRadius="md" />
+    </HStack>
+    <Grid templateColumns="repeat(7, 1fr)" gap={1}>
+      {Array.from({ length: 28 }).map((_, i) => (
+        <Box key={i} h="28px" borderRadius="sm" overflow="hidden" position="relative">
+          <ShimmerBox height="28px" borderRadius="sm" />
+        </Box>
+      ))}
+    </Grid>
+    <HStack gap={2} justify="flex-end">
+      <ShimmerBox height="10px" width="30px" borderRadius="md" />
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Box key={i} w="10px" h="10px" borderRadius="sm" overflow="hidden" position="relative">
+          <ShimmerBox height="10px" width="10px" borderRadius="sm" />
+        </Box>
+      ))}
+      <ShimmerBox height="10px" width="30px" borderRadius="md" />
+    </HStack>
+  </VStack>
+);
+
+const DayOfWeekSkeleton = () => (
+  <VStack gap={3} align="stretch">
+    <HStack gap={2} justify="space-between">
+      {Array.from({ length: 7 }).map((_, i) => (
+        <Box key={i} flex="1" overflow="hidden" position="relative">
+          <ShimmerBox height="80px" borderRadius="lg" />
+        </Box>
+      ))}
+    </HStack>
+    <HStack gap={2} justify="center">
+      {Array.from({ length: 7 }).map((_, i) => (
+        <Box key={i} w="40px" h="12px" borderRadius="md" overflow="hidden" position="relative">
+          <ShimmerBox height="12px" width="40px" borderRadius="md" />
+        </Box>
+      ))}
+    </HStack>
+  </VStack>
+);
+
+const BadgeSkeleton = () => (
+  <HStack gap={3} flexWrap="wrap">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <Box key={i} px={3} py={2} borderRadius="xl" border="1px solid" borderColor="rgba(148,163,184,0.14)" overflow="hidden" position="relative">
+        <ShimmerBox height="24px" width="100px" borderRadius="md" />
+      </Box>
+    ))}
+  </HStack>
+);
+
+const LeaderboardSkeleton = () => (
+  <VStack gap={3} align="stretch">
+    <HStack gap={1} bg="rgba(148,163,184,0.06)" _dark={{ bg: "rgba(148,163,184,0.08)" }} p={1} borderRadius="xl">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Box key={i} flex="1" h="28px" borderRadius="lg" overflow="hidden" position="relative">
+          <ShimmerBox height="28px" borderRadius="lg" />
+        </Box>
+      ))}
+    </HStack>
+    {Array.from({ length: 5 }).map((_, i) => (
+      <HStack key={i} gap={3} p={3} borderRadius="xl">
+        <Box w="28px" h="28px" borderRadius="full" overflow="hidden" position="relative">
+          <ShimmerBox height="28px" width="28px" borderRadius="full" />
+        </Box>
+        <Box flex="1" h="16px" borderRadius="md" overflow="hidden" position="relative">
+          <ShimmerBox height="16px" borderRadius="md" />
+        </Box>
+        <Box w="50px" h="16px" borderRadius="md" overflow="hidden" position="relative">
+          <ShimmerBox height="16px" width="50px" borderRadius="md" />
+        </Box>
+      </HStack>
+    ))}
+  </VStack>
+);
 
 import {
   LuArrowLeft,
@@ -38,20 +181,13 @@ import UserNavbar from "@/components/Navbar/UserNavbar";
 import Footer from "@/components/Footer";
 import UpgradeModal from "@/components/UpgradeModal";
 import useAuthenticateUser from "@/hooks/useAuthenticateUser";
-import useHabits from "@/hooks/useHabits";
+import useAnalytics from "@/hooks/useAnalytics";
 
 import {
-  getGlobalStats,
-  getMonthlyLeaderboard,
   getFreeMonthBoundary,
   isMonthWithinFreeWindow,
   getMonthLabel,
   getMonthShortLabel,
-  getDayOfWeekStats,
-  getQuarterHeatmapData,
-  getDayDetail,
-  getMonthComparison,
-  getBadges,
   type MonthHeatmapDay,
   type LeaderboardEntry,
   type DayOfWeekStat,
@@ -748,9 +884,20 @@ const PaywallOverlay = ({
 
 const AnalyticsPage = () => {
   const { user, loading: userLoading, logout } = useAuthenticateUser();
-  const { habits, loading: habitsLoading } = useHabits();
+  const {
+    globalStats,
+    heatmap: quarterHeatmap,
+    leaderboard,
+    dayOfWeekStats,
+    badges,
+    dayDetail,
+    monthComparison,
+    loading: analyticsLoading,
+    fetchLeaderboard,
+    fetchDayDetail,
+  } = useAnalytics();
 
-  const isLoading = userLoading || habitsLoading;
+  const isLoading = userLoading || analyticsLoading;
 
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -770,41 +917,19 @@ const AnalyticsPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    fetchLeaderboard(viewYear, viewMonth, leaderboardTab);
+  }, [fetchLeaderboard, viewYear, viewMonth, leaderboardTab]);
+
+  useEffect(() => {
+    if (selectedDay) {
+      fetchDayDetail(selectedDay);
+    }
+  }, [fetchDayDetail, selectedDay]);
+
   const monthLabel = getMonthLabel(viewYear, viewMonth);
   const isFree = isMonthWithinFreeWindow(viewYear, viewMonth);
   const freeBoundary = getFreeMonthBoundary();
-
-  const quarterHeatmap = useMemo(
-    () => (isLoading ? [] : getQuarterHeatmapData(habits)),
-    [habits, isLoading]
-  );
-
-  const dayOfWeekStats = useMemo(
-    () => (isLoading ? [] : getDayOfWeekStats(habits)),
-    [habits, isLoading]
-  );
-
-  const leaderboard = useMemo(
-    () => (isLoading ? [] : getMonthlyLeaderboard(habits, viewYear, viewMonth, leaderboardTab)),
-    [habits, viewYear, viewMonth, leaderboardTab, isLoading]
-  );
-
-  const monthComparison = useMemo(
-    () => (isLoading ? null : getMonthComparison(habits)),
-    [habits, isLoading]
-  );
-
-  const dayDetail = useMemo(
-    () => (selectedDay && !isLoading ? getDayDetail(habits, selectedDay) : null),
-    [habits, selectedDay, isLoading]
-  );
-
-  const badges = useMemo(
-    () => (isLoading ? [] : getBadges(habits)),
-    [habits, isLoading]
-  );
-
-  const globalStats: GlobalStats | null = isLoading ? null : getGlobalStats(habits);
 
   const shiftMonth = (dir: number) => {
     const d = new Date(viewYear, viewMonth + dir, 1);
@@ -868,26 +993,37 @@ const AnalyticsPage = () => {
           </Link>
         </HStack>
 
-        <HStack gap={3} align="center" flexWrap="wrap">
-          <Box
-            p={2.5}
-            borderRadius="xl"
-            bg="#6366F1"
-            color="white"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <LuChartBar size={22} />
-          </Box>
-          <Heading
-            size="lg"
-            color="#0F172A"
-            _dark={{ color: "#F8FAFC" }}
-          >
-            Analytics
-          </Heading>
-        </HStack>
+        {isLoading ? (
+          <HStack gap={3} align="center" flexWrap="wrap">
+            <Box p={2.5} borderRadius="xl" overflow="hidden" position="relative" w="45px" h="45px">
+              <ShimmerBox height="45px" width="45px" borderRadius="xl" />
+            </Box>
+            <Box w="120px" h="32px" borderRadius="md" overflow="hidden" position="relative">
+              <ShimmerBox height="32px" width="120px" borderRadius="md" />
+            </Box>
+          </HStack>
+        ) : (
+          <HStack gap={3} align="center" flexWrap="wrap">
+            <Box
+              p={2.5}
+              borderRadius="xl"
+              bg="#6366F1"
+              color="white"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <LuChartBar size={22} />
+            </Box>
+            <Heading
+              size="lg"
+              color="#0F172A"
+              _dark={{ color: "#F8FAFC" }}
+            >
+              Analytics
+            </Heading>
+          </HStack>
+        )}
       </Box>
 
       {/* MAIN CONTENT */}
@@ -895,18 +1031,22 @@ const AnalyticsPage = () => {
         px={{ base: 4, md: 8, lg: 10 }}
         pb={10}
       >
+        {/* LOADING INDICATOR */}
+        {isLoading && (
+          <HStack gap={2} mb={4} opacity={0.6}>
+            <Spinner size="sm" color="#6366F1" />
+            <Text fontSize="sm" color="#64748B" _dark={{ color: "#94A3B8" }} fontWeight="500">
+              Loading analytics data...
+            </Text>
+          </HStack>
+        )}
+
         {/* 3 HERO STATS */}
         {isLoading && (
           <Flex gap={3} mb={8} flexWrap="wrap">
-            {[1, 2, 3].map(i => (
-              <Skeleton
-                key={i}
-                h="120px"
-                borderRadius="2xl"
-                flex="1"
-                minW="160px"
-              />
-            ))}
+            <HeroStatSkeleton />
+            <HeroStatSkeleton />
+            <HeroStatSkeleton />
           </Flex>
         )}
 
@@ -1024,7 +1164,7 @@ const AnalyticsPage = () => {
           </Flex>
 
           {isLoading ? (
-            <Skeleton h="200px" borderRadius="xl" />
+            <HeatmapSkeleton />
           ) : (
             <>
               <QuarterHeatmap
@@ -1139,7 +1279,7 @@ const AnalyticsPage = () => {
               </HStack>
 
               {isLoading ? (
-                <Skeleton h="120px" borderRadius="xl" />
+                <DayOfWeekSkeleton />
               ) : (
                 <DayOfWeekChart data={dayOfWeekStats} />
               )}
@@ -1182,7 +1322,7 @@ const AnalyticsPage = () => {
               </HStack>
 
               {isLoading ? (
-                <Skeleton h="60px" borderRadius="xl" />
+                <BadgeSkeleton />
               ) : (
                 <Badges badges={badges} />
               )}
@@ -1298,7 +1438,7 @@ const AnalyticsPage = () => {
               </HStack>
 
               {isLoading ? (
-                <Skeleton h="300px" borderRadius="xl" />
+                <LeaderboardSkeleton />
               ) : (
                 <>
                   <Tabs.Root

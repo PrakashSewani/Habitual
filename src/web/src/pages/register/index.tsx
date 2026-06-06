@@ -11,6 +11,7 @@ import {
     IconButton,
     Input,
     InputGroup,
+    Progress,
     Text,
     VStack,
 } from "@chakra-ui/react";
@@ -18,9 +19,13 @@ import {
 import {
     LuEye,
     LuEyeOff,
+    LuX,
+    LuCheck,
+    LuUpload,
+    LuUser,
 } from "react-icons/lu";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import LoginNavbar from "@/components/Navbar/LoginNavbar";
 
@@ -67,13 +72,79 @@ const RegisterPage = () => {
         confirmPassword?: string;
         phoneNumber?: string;
         dateOfBirth?: string;
+        avatar?: string;
     }>({});
+
+    const [touched, setTouched] = useState<{
+        name?: boolean;
+        email?: boolean;
+        password?: boolean;
+        confirmPassword?: boolean;
+        phoneNumber?: boolean;
+        dateOfBirth?: boolean;
+    }>({});
+
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    useEffect(() => {
+        return () => {
+            if (avatarPreview) {
+                URL.revokeObjectURL(avatarPreview);
+            }
+        };
+    }, [avatarPreview]);
 
     const axiosRequest =
         useAxiosRequest();
 
     const router =
         useRouter();
+
+    // ========================================
+    // PASSWORD STRENGTH
+    // ========================================
+
+    const getPasswordStrength = (value: string) => {
+        if (!value) return { score: 0, label: "", color: "gray" };
+        let score = 0;
+        if (value.length >= 8) score++;
+        if (/[A-Z]/.test(value)) score++;
+        if (/[a-z]/.test(value)) score++;
+        if (/\d/.test(value)) score++;
+        if (/[^\da-zA-Z]/.test(value)) score++;
+
+        const levels = [
+            { label: "Too weak", color: "red" },
+            { label: "Weak", color: "orange" },
+            { label: "Fair", color: "yellow" },
+            { label: "Good", color: "blue" },
+            { label: "Strong", color: "green" },
+        ];
+        return { score, label: levels[score - 1]?.label || "", color: levels[score - 1]?.color || "gray" };
+    };
+
+    const passwordStrength = getPasswordStrength(password);
+
+    // ========================================
+    // FORM PROGRESS
+    // ========================================
+
+    const getFormProgress = useCallback(() => {
+        let filled = 0;
+        const total = 6;
+        if (name.trim()) filled++;
+        if (email.trim()) filled++;
+        if (password.trim()) filled++;
+        if (confirmPassword.trim()) filled++;
+        if (phoneNumber.trim()) filled++;
+        if (dateOfBirth.trim()) filled++;
+        return (filled / total) * 100;
+    }, [name, email, password, confirmPassword, phoneNumber, dateOfBirth]);
+
+    const formProgress = getFormProgress();
 
     // ========================================
     // VALIDATORS
@@ -183,6 +254,111 @@ Password must contain at least:
         return "";
     };
 
+    const validateAvatar = (
+        file: File | null
+    ) => {
+        if (!file) return "";
+        if (file.size > 2 * 1024 * 1024) {
+            return "Image must be under 2MB.";
+        }
+        const allowedTypes = ["image/png", "image/jpeg"];
+        if (!allowedTypes.includes(file.type)) {
+            return "Only PNG or JPG images allowed.";
+        }
+        return "";
+    };
+
+    // ========================================
+    // REAL-TIME VALIDATION
+    // ========================================
+
+    const validateField = useCallback((field: string, value: string) => {
+        switch (field) {
+            case "name":
+                return validateName(value);
+            case "email":
+                return validateEmail(value);
+            case "password":
+                return validatePassword(value);
+            case "confirmPassword":
+                return validateConfirmPassword(value);
+            case "phoneNumber":
+                return validatePhoneNumber(value);
+            case "dateOfBirth":
+                return validateDateOfBirth(value);
+            default:
+                return "";
+        }
+    }, [password]);
+
+    const handleBlur = (field: string) => {
+        setTouched(prev => ({ ...prev, [field]: true }));
+        const error = validateField(field, 
+            field === "name" ? name :
+            field === "email" ? email :
+            field === "password" ? password :
+            field === "confirmPassword" ? confirmPassword :
+            field === "phoneNumber" ? phoneNumber :
+            field === "dateOfBirth" ? dateOfBirth : ""
+        );
+        setErrors(prev => ({ ...prev, [field]: error }));
+    };
+
+    // ========================================
+    // AVATAR HANDLERS
+    // ========================================
+
+    const handleAvatarChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = e.target.files?.[0] || null;
+        if (file) {
+            const error = validateAvatar(file);
+            if (error) {
+                setErrors(prev => ({ ...prev, avatar: error }));
+                return;
+            }
+            setErrors(prev => ({ ...prev, avatar: undefined }));
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        } else {
+            setAvatarFile(null);
+            setAvatarPreview(null);
+        }
+    };
+
+    const handleRemoveAvatar = () => {
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        setErrors(prev => ({ ...prev, avatar: undefined }));
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files?.[0] || null;
+        if (file) {
+            const error = validateAvatar(file);
+            if (error) {
+                setErrors(prev => ({ ...prev, avatar: error }));
+                return;
+            }
+            setErrors(prev => ({ ...prev, avatar: undefined }));
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        }
+    };
+
     // ========================================
     // HANDLERS
     // ========================================
@@ -192,6 +368,16 @@ Password must contain at least:
     ) => {
 
         e.preventDefault();
+
+        // Mark all as touched
+        setTouched({
+            name: true,
+            email: true,
+            password: true,
+            confirmPassword: true,
+            phoneNumber: true,
+            dateOfBirth: true,
+        });
 
         const nameError =
             validateName(name);
@@ -211,13 +397,17 @@ Password must contain at least:
         const dateOfBirthError =
             validateDateOfBirth(dateOfBirth);
 
+        const avatarError =
+            validateAvatar(avatarFile);
+
         if (
             nameError ||
             emailError ||
             passwordError ||
             confirmPasswordError ||
             phoneNumberError ||
-            dateOfBirthError
+            dateOfBirthError ||
+            avatarError
         ) {
             setErrors({
                 name: nameError,
@@ -226,37 +416,78 @@ Password must contain at least:
                 confirmPassword: confirmPasswordError,
                 phoneNumber: phoneNumberError,
                 dateOfBirth: dateOfBirthError,
+                avatar: avatarError,
             });
 
             return;
         }
 
         setErrors({});
+        setIsSubmitting(true);
 
-        const resp = await axiosRequest.post(
-            "/user/create",
-            {
-                name,
-                email,
-                password,
-                phoneNumber,
-                dateOfBirth,
+        try {
+            // Register
+            const resp = await axiosRequest.post(
+                "/user/create",
+                {
+                    name,
+                    email,
+                    password,
+                    phoneNumber,
+                    dateOfBirth,
+                }
+            );
+
+            const data = resp.data;
+
+            if (data?.success) {
+                // Auto-login
+                const loginResp = await axiosRequest.post(
+                    "/user/login",
+                    {
+                        email,
+                        password,
+                        source: 1,
+                    }
+                );
+
+                const loginData = loginResp.data;
+                if (loginData?.success) {
+                    sessionStorage.setItem(
+                        "token",
+                        loginData.data.token
+                    );
+                    sessionStorage.setItem(
+                        "refreshToken",
+                        loginData.data.refreshToken
+                    );
+
+                    // Upload avatar if selected
+                    if (avatarFile) {
+                        const formData = new FormData();
+                        formData.append("file", avatarFile);
+                        await axiosRequest.post(
+                            "/user/avatar",
+                            formData
+                        );
+                    }
+
+                    router.push("/dashboard");
+                } else {
+                    router.push("/login");
+                }
             }
-        );
-
-        const data = resp.data;
-
-        if (data?.success) {
-            router.push("/login");
+        } catch {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <Box
-            h="100vh"
+            minH="100dvh"
             display="flex"
             flexDirection="column"
-            overflow="hidden"
+            overflow="auto"
             bg="#FAFAFF"
             _dark={{
                 bg: "#020617",
@@ -289,7 +520,11 @@ Password must contain at least:
                 <Flex
                     w="full"
                     maxW="1400px"
-                    gap={20}
+                    gap={{
+                        base: 0,
+                        lg: 12,
+                        xl: 20,
+                    }}
                     align="center"
                     justify="space-between"
                 >
@@ -361,25 +596,25 @@ Password must contain at least:
                             w="full"
                             maxW="650px"
                             p={8}
-                            borderRadius="3xl"
+                            borderRadius="2xl"
                             border="1px solid"
                             borderColor="gray.200"
                             bg="white"
                             boxShadow="
-                                0 20px 60px rgba(0,0,0,0.06)
+                                0 10px 40px rgba(0,0,0,0.06)
                             "
                             _dark={{
                                 bg: "#111827",
                                 borderColor:
                                     "rgba(148,163,184,0.16)",
                                 boxShadow:
-                                    "0 20px 60px rgba(0,0,0,0.35)",
+                                    "0 10px 40px rgba(0,0,0,0.35)",
                             }}
                         >
 
                             <VStack
                                 align="stretch"
-                                gap={6}
+                                gap={4}
                             >
 
                                 <HStack
@@ -416,8 +651,8 @@ Password must contain at least:
                                     </VStack>
 
                                     <Box
-                                        px={4}
-                                        py={2}
+                                        px={3}
+                                        py={1.5}
                                         borderRadius="full"
                                         bg="
                                             rgba(16,185,129,0.12)
@@ -437,7 +672,7 @@ Password must contain at least:
                                 <HStack
                                     align="end"
                                     gap={3}
-                                    h="160px"
+                                    h="120px"
                                 >
 
                                     {[40, 65, 55, 85, 75, 100, 90]
@@ -452,6 +687,7 @@ Password must contain at least:
                                                         ? "#6366F1"
                                                         : "rgba(99,102,241,0.18)"
                                                 }
+                                                transition="height 0.5s ease"
                                             />
                                         ))}
 
@@ -476,22 +712,22 @@ Password must contain at least:
                             w="full"
                             maxW="480px"
                             p={{
-                                base: 6,
-                                md: 8,
+                                base: 5,
+                                md: 6,
                             }}
-                            borderRadius="3xl"
+                            borderRadius="2xl"
                             border="1px solid"
                             borderColor="gray.200"
                             bg="white"
                             boxShadow="
-                                0 20px 60px rgba(0,0,0,0.06)
+                                0 10px 40px rgba(0,0,0,0.06)
                             "
                             _dark={{
                                 bg: "#111827",
                                 borderColor:
                                     "rgba(148,163,184,0.16)",
                                 boxShadow:
-                                    "0 20px 60px rgba(0,0,0,0.35)",
+                                    "0 10px 40px rgba(0,0,0,0.35)",
                             }}
                         >
 
@@ -499,16 +735,16 @@ Password must contain at least:
 
                             <VStack
                                 align="start"
-                                gap={3}
-                                mb={6}
+                                gap={2}
+                                mb={4}
                             >
 
                                 <Heading
                                     fontSize={{
-                                        base: "3xl",
-                                        md: "4xl",
+                                        base: "2xl",
+                                        md: "3xl",
                                     }}
-                                    letterSpacing="-0.04em"
+                                    letterSpacing="-0.03em"
                                     color="#0F172A"
                                     _dark={{
                                         color: "#F8FAFC",
@@ -518,8 +754,9 @@ Password must contain at least:
                                 </Heading>
 
                                 <Text
+                                    fontSize="sm"
                                     color="#64748B"
-                                    lineHeight="1.8"
+                                    lineHeight="1.6"
                                     _dark={{
                                         color: "#94A3B8",
                                     }}
@@ -531,12 +768,130 @@ Password must contain at least:
 
                             </VStack>
 
+                            {/* PROGRESS BAR */}
+                            <VStack align="stretch" gap={1} mb={4}>
+                                <HStack justify="space-between">
+                                    <Text fontSize="xs" fontWeight="600" color="#64748B" _dark={{ color: "#94A3B8" }}>
+                                        Form completion
+                                    </Text>
+                                    <Text fontSize="xs" fontWeight="700" color="#6366F1">
+                                        {Math.round(formProgress)}%
+                                    </Text>
+                                </HStack>
+                                <Box
+                                    h="6px"
+                                    borderRadius="full"
+                                    bg="rgba(99,102,241,0.08)"
+                                    overflow="hidden"
+                                >
+                                    <Box
+                                        h="full"
+                                        borderRadius="full"
+                                        bg="#6366F1"
+                                        transition="width 0.4s ease"
+                                        w={`${formProgress}%`}
+                                    />
+                                </Box>
+                            </VStack>
+
                             {/* FORM */}
 
                             <VStack
-                                gap={4}
+                                gap={3}
                                 align="stretch"
                             >
+
+                                {/* AVATAR */}
+                                <VStack align="center" gap={2}>
+                                    <Box
+                                        w="80px"
+                                        h="80px"
+                                        borderRadius="full"
+                                        bg={isDragging ? "rgba(99,102,241,0.20)" : "rgba(99,102,241,0.10)"}
+                                        overflow="hidden"
+                                        border="2px dashed"
+                                        borderColor={isDragging ? "#6366F1" : errors.avatar ? "red.400" : "rgba(99,102,241,0.30)"}
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        position="relative"
+                                        transition="all 0.2s ease"
+                                        cursor="pointer"
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                        onClick={() => document.getElementById("avatar-input")?.click()}
+                                    >
+                                        {avatarPreview ? (
+                                            <>
+                                                <img
+                                                    src={avatarPreview}
+                                                    alt="Avatar preview"
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "100%",
+                                                        objectFit: "cover",
+                                                    }}
+                                                />
+                                                <Box
+                                                    position="absolute"
+                                                    top="0"
+                                                    right="0"
+                                                    bg="rgba(0,0,0,0.5)"
+                                                    borderRadius="full"
+                                                    p="2px"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveAvatar();
+                                                    }}
+                                                >
+                                                    <LuX size="12" color="white" />
+                                                </Box>
+                                            </>
+                                        ) : (
+                                            <VStack gap={0} align="center">
+                                                {isDragging ? (
+                                                    <LuUpload size="20" color="#6366F1" />
+                                                ) : (
+                                                    <LuUser size="20" color="#6366F1" />
+                                                )}
+                                                <Text fontSize="10px" color="#6366F1" fontWeight="600">
+                                                    {isDragging ? "Drop here" : "Click or drag"}
+                                                </Text>
+                                            </VStack>
+                                        )}
+                                    </Box>
+                                    <Input
+                                        id="avatar-input"
+                                        type="file"
+                                        accept="image/png,image/jpeg"
+                                        onChange={handleAvatarChange}
+                                        display="none"
+                                    />
+                                    {avatarFile && (
+                                        <HStack gap={1}>
+                                            <Text fontSize="xs" color="#64748B" _dark={{ color: "#94A3B8" }}>
+                                                {avatarFile.name}
+                                            </Text>
+                                            <IconButton
+                                                aria-label="remove avatar"
+                                                size="xs"
+                                                variant="ghost"
+                                                onClick={handleRemoveAvatar}
+                                            >
+                                                <LuX size="14" />
+                                            </IconButton>
+                                        </HStack>
+                                    )}
+                                    {errors.avatar && (
+                                        <Text fontSize="sm" color="red.400">
+                                            {errors.avatar}
+                                        </Text>
+                                    )}
+                                    <Text fontSize="xs" color="#94A3B8" _dark={{ color: "#64748B" }}>
+                                        Optional. PNG or JPG, max 2MB.
+                                    </Text>
+                                </VStack>
 
                                 {/* NAME + EMAIL */}
 
@@ -547,12 +902,12 @@ Password must contain at least:
 
                                     <VStack
                                         align="stretch"
-                                        gap={3}
+                                        gap={2}
                                         flex="1"
                                     >
 
                                         <Text
-                                            fontSize="sm"
+                                            fontSize="xs"
                                             fontWeight="700"
                                             textTransform="uppercase"
                                             letterSpacing="0.08em"
@@ -572,12 +927,15 @@ Password must contain at least:
                                                     e.target.value
                                                 )
                                             }
-                                            h="56px"
+                                            onBlur={() => handleBlur("name")}
+                                            h="48px"
                                             borderRadius="xl"
                                             borderColor={
-                                                errors.name
+                                                touched.name && errors.name
                                                     ? "red.400"
-                                                    : "rgba(99,102,241,0.15)"
+                                                    : touched.name && !errors.name && name
+                                                        ? "#10B981"
+                                                        : "rgba(99,102,241,0.15)"
                                             }
                                             placeholder="John Doe"
                                             bg="white"
@@ -585,9 +943,11 @@ Password must contain at least:
                                             _dark={{
                                                 bg: "#020617",
                                                 borderColor:
-                                                    errors.name
+                                                    touched.name && errors.name
                                                         ? "red.400"
-                                                        : "rgba(148,163,184,0.16)",
+                                                        : touched.name && !errors.name && name
+                                                            ? "#10B981"
+                                                            : "rgba(148,163,184,0.16)",
                                                 color: "#F8FAFC",
                                             }}
                                             _placeholder={{
@@ -601,7 +961,7 @@ Password must contain at least:
                                             }}
                                         />
 
-                                        {errors.name && (
+                                        {touched.name && errors.name && (
                                             <Text
                                                 fontSize="sm"
                                                 color="red.400"
@@ -614,12 +974,12 @@ Password must contain at least:
 
                                     <VStack
                                         align="stretch"
-                                        gap={3}
+                                        gap={2}
                                         flex="1"
                                     >
 
                                         <Text
-                                            fontSize="sm"
+                                            fontSize="xs"
                                             fontWeight="700"
                                             textTransform="uppercase"
                                             letterSpacing="0.08em"
@@ -639,12 +999,15 @@ Password must contain at least:
                                                     e.target.value
                                                 )
                                             }
-                                            h="56px"
+                                            onBlur={() => handleBlur("email")}
+                                            h="48px"
                                             borderRadius="xl"
                                             borderColor={
-                                                errors.email
+                                                touched.email && errors.email
                                                     ? "red.400"
-                                                    : "rgba(99,102,241,0.15)"
+                                                    : touched.email && !errors.email && email
+                                                        ? "#10B981"
+                                                        : "rgba(99,102,241,0.15)"
                                             }
                                             placeholder="name@company.com"
                                             bg="white"
@@ -652,9 +1015,11 @@ Password must contain at least:
                                             _dark={{
                                                 bg: "#020617",
                                                 borderColor:
-                                                    errors.email
+                                                    touched.email && errors.email
                                                         ? "red.400"
-                                                        : "rgba(148,163,184,0.16)",
+                                                        : touched.email && !errors.email && email
+                                                            ? "#10B981"
+                                                            : "rgba(148,163,184,0.16)",
                                                 color: "#F8FAFC",
                                             }}
                                             _placeholder={{
@@ -668,7 +1033,7 @@ Password must contain at least:
                                             }}
                                         />
 
-                                        {errors.email && (
+                                        {touched.email && errors.email && (
                                             <Text
                                                 fontSize="sm"
                                                 color="red.400"
@@ -685,11 +1050,11 @@ Password must contain at least:
 
                                 <VStack
                                     align="stretch"
-                                    gap={3}
+                                    gap={2}
                                 >
 
                                     <Text
-                                        fontSize="sm"
+                                        fontSize="xs"
                                         fontWeight="700"
                                         textTransform="uppercase"
                                         letterSpacing="0.08em"
@@ -727,7 +1092,8 @@ Password must contain at least:
                                                     e.target.value
                                                 )
                                             }
-                                            h="56px"
+                                            onBlur={() => handleBlur("password")}
+                                            h="48px"
                                             type={
                                                 showPassword
                                                     ? "text"
@@ -735,9 +1101,11 @@ Password must contain at least:
                                             }
                                             borderRadius="xl"
                                             borderColor={
-                                                errors.password
+                                                touched.password && errors.password
                                                     ? "red.400"
-                                                    : "rgba(99,102,241,0.15)"
+                                                    : touched.password && !errors.password && password
+                                                        ? "#10B981"
+                                                        : "rgba(99,102,241,0.15)"
                                             }
                                             placeholder="••••••••"
                                             bg="white"
@@ -745,9 +1113,11 @@ Password must contain at least:
                                             _dark={{
                                                 bg: "#020617",
                                                 borderColor:
-                                                    errors.password
+                                                    touched.password && errors.password
                                                         ? "red.400"
-                                                        : "rgba(148,163,184,0.16)",
+                                                        : touched.password && !errors.password && password
+                                                            ? "#10B981"
+                                                            : "rgba(148,163,184,0.16)",
                                                 color: "#F8FAFC",
                                             }}
                                             _placeholder={{
@@ -763,7 +1133,68 @@ Password must contain at least:
 
                                     </InputGroup>
 
-                                    {errors.password && (
+                                    {/* Password Strength */}
+                                    {password && (
+                                        <VStack align="stretch" gap={1}>
+                                            <HStack justify="space-between">
+                                                <Text fontSize="xs" fontWeight="600" color={passwordStrength.color === "gray" ? "#94A3B8" : passwordStrength.color}>
+                                                    {passwordStrength.label}
+                                                </Text>
+                                                <Text fontSize="xs" color="#94A3B8">
+                                                    {passwordStrength.score}/5
+                                                </Text>
+                                            </HStack>
+                                            <HStack gap={1}>
+                                                {[1, 2, 3, 4, 5].map((level) => (
+                                                    <Box
+                                                        key={level}
+                                                        flex="1"
+                                                        h="4px"
+                                                        borderRadius="full"
+                                                        bg={
+                                                            level <= passwordStrength.score
+                                                                ? passwordStrength.color === "red" ? "#EF4444"
+                                                                    : passwordStrength.color === "orange" ? "#F97316"
+                                                                        : passwordStrength.color === "yellow" ? "#EAB308"
+                                                                            : passwordStrength.color === "blue" ? "#3B82F6"
+                                                                                : "#10B981"
+                                                                : "rgba(99,102,241,0.08)"
+                                                        }
+                                                        transition="all 0.3s ease"
+                                                    />
+                                                ))}
+                                            </HStack>
+                                            <HStack gap={2} wrap="wrap">
+                                                {[
+                                                    { label: "8+ chars", met: password.length >= 8 },
+                                                    { label: "Uppercase", met: /[A-Z]/.test(password) },
+                                                    { label: "Lowercase", met: /[a-z]/.test(password) },
+                                                    { label: "Number", met: /\d/.test(password) },
+                                                    { label: "Special", met: /[^\da-zA-Z]/.test(password) },
+                                                ].map((req) => (
+                                                    <HStack key={req.label} gap={1}>
+                                                        <Box
+                                                            w="14px"
+                                                            h="14px"
+                                                            borderRadius="full"
+                                                            display="flex"
+                                                            alignItems="center"
+                                                            justifyContent="center"
+                                                            bg={req.met ? "#10B981" : "rgba(148,163,184,0.20)"}
+                                                            transition="all 0.2s ease"
+                                                        >
+                                                            {req.met && <LuCheck size="10" color="white" />}
+                                                        </Box>
+                                                        <Text fontSize="10px" color={req.met ? "#10B981" : "#94A3B8"} fontWeight={req.met ? "600" : "400"}>
+                                                            {req.label}
+                                                        </Text>
+                                                    </HStack>
+                                                ))}
+                                            </HStack>
+                                        </VStack>
+                                    )}
+
+                                    {touched.password && errors.password && (
                                         <Text
                                             whiteSpace="pre-line"
                                             fontSize="sm"
@@ -779,11 +1210,11 @@ Password must contain at least:
 
                                 <VStack
                                     align="stretch"
-                                    gap={3}
+                                    gap={2}
                                 >
 
                                     <Text
-                                        fontSize="sm"
+                                        fontSize="xs"
                                         fontWeight="700"
                                         textTransform="uppercase"
                                         letterSpacing="0.08em"
@@ -821,7 +1252,8 @@ Password must contain at least:
                                                     e.target.value
                                                 )
                                             }
-                                            h="56px"
+                                            onBlur={() => handleBlur("confirmPassword")}
+                                            h="48px"
                                             type={
                                                 showConfirmPassword
                                                     ? "text"
@@ -829,9 +1261,11 @@ Password must contain at least:
                                             }
                                             borderRadius="xl"
                                             borderColor={
-                                                errors.confirmPassword
+                                                touched.confirmPassword && errors.confirmPassword
                                                     ? "red.400"
-                                                    : "rgba(99,102,241,0.15)"
+                                                    : touched.confirmPassword && !errors.confirmPassword && confirmPassword
+                                                        ? "#10B981"
+                                                        : "rgba(99,102,241,0.15)"
                                             }
                                             placeholder="••••••••"
                                             bg="white"
@@ -839,9 +1273,11 @@ Password must contain at least:
                                             _dark={{
                                                 bg: "#020617",
                                                 borderColor:
-                                                    errors.confirmPassword
+                                                    touched.confirmPassword && errors.confirmPassword
                                                         ? "red.400"
-                                                        : "rgba(148,163,184,0.16)",
+                                                        : touched.confirmPassword && !errors.confirmPassword && confirmPassword
+                                                            ? "#10B981"
+                                                            : "rgba(148,163,184,0.16)",
                                                 color: "#F8FAFC",
                                             }}
                                             _placeholder={{
@@ -857,7 +1293,7 @@ Password must contain at least:
 
                                     </InputGroup>
 
-                                    {errors.confirmPassword && (
+                                    {touched.confirmPassword && errors.confirmPassword && (
                                         <Text
                                             fontSize="sm"
                                             color="red.400"
@@ -877,12 +1313,12 @@ Password must contain at least:
 
                                     <VStack
                                         align="stretch"
-                                        gap={3}
+                                        gap={2}
                                         flex="1"
                                     >
 
                                         <Text
-                                            fontSize="sm"
+                                            fontSize="xs"
                                             fontWeight="700"
                                             textTransform="uppercase"
                                             letterSpacing="0.08em"
@@ -902,12 +1338,15 @@ Password must contain at least:
                                                     e.target.value
                                                 )
                                             }
-                                            h="56px"
+                                            onBlur={() => handleBlur("phoneNumber")}
+                                            h="48px"
                                             borderRadius="xl"
                                             borderColor={
-                                                errors.phoneNumber
+                                                touched.phoneNumber && errors.phoneNumber
                                                     ? "red.400"
-                                                    : "rgba(99,102,241,0.15)"
+                                                    : touched.phoneNumber && !errors.phoneNumber && phoneNumber
+                                                        ? "#10B981"
+                                                        : "rgba(99,102,241,0.15)"
                                             }
                                             placeholder="+1234567890"
                                             bg="white"
@@ -915,9 +1354,11 @@ Password must contain at least:
                                             _dark={{
                                                 bg: "#020617",
                                                 borderColor:
-                                                    errors.phoneNumber
+                                                    touched.phoneNumber && errors.phoneNumber
                                                         ? "red.400"
-                                                        : "rgba(148,163,184,0.16)",
+                                                        : touched.phoneNumber && !errors.phoneNumber && phoneNumber
+                                                            ? "#10B981"
+                                                            : "rgba(148,163,184,0.16)",
                                                 color: "#F8FAFC",
                                             }}
                                             _placeholder={{
@@ -931,7 +1372,7 @@ Password must contain at least:
                                             }}
                                         />
 
-                                        {errors.phoneNumber && (
+                                        {touched.phoneNumber && errors.phoneNumber && (
                                             <Text
                                                 fontSize="sm"
                                                 color="red.400"
@@ -944,12 +1385,12 @@ Password must contain at least:
 
                                     <VStack
                                         align="stretch"
-                                        gap={3}
+                                        gap={2}
                                         flex="1"
                                     >
 
                                         <Text
-                                            fontSize="sm"
+                                            fontSize="xs"
                                             fontWeight="700"
                                             textTransform="uppercase"
                                             letterSpacing="0.08em"
@@ -969,12 +1410,15 @@ Password must contain at least:
                                                     e.target.value
                                                 )
                                             }
-                                            h="56px"
+                                            onBlur={() => handleBlur("dateOfBirth")}
+                                            h="48px"
                                             borderRadius="xl"
                                             borderColor={
-                                                errors.dateOfBirth
+                                                touched.dateOfBirth && errors.dateOfBirth
                                                     ? "red.400"
-                                                    : "rgba(99,102,241,0.15)"
+                                                    : touched.dateOfBirth && !errors.dateOfBirth && dateOfBirth
+                                                        ? "#10B981"
+                                                        : "rgba(99,102,241,0.15)"
                                             }
                                             type="date"
                                             bg="white"
@@ -982,9 +1426,11 @@ Password must contain at least:
                                             _dark={{
                                                 bg: "#020617",
                                                 borderColor:
-                                                    errors.dateOfBirth
+                                                    touched.dateOfBirth && errors.dateOfBirth
                                                         ? "red.400"
-                                                        : "rgba(148,163,184,0.16)",
+                                                        : touched.dateOfBirth && !errors.dateOfBirth && dateOfBirth
+                                                            ? "#10B981"
+                                                            : "rgba(148,163,184,0.16)",
                                                 color: "#F8FAFC",
                                             }}
                                             _placeholder={{
@@ -998,7 +1444,7 @@ Password must contain at least:
                                             }}
                                         />
 
-                                        {errors.dateOfBirth && (
+                                        {touched.dateOfBirth && errors.dateOfBirth && (
                                             <Text
                                                 fontSize="sm"
                                                 color="red.400"
@@ -1015,20 +1461,22 @@ Password must contain at least:
 
                                 <Button
                                     type="submit"
-                                    h="60px"
+                                    h="52px"
                                     bg="#6366F1"
                                     color="white"
                                     borderRadius="xl"
                                     fontWeight="700"
                                     fontSize="md"
                                     boxShadow="
-                                        0 10px 30px rgba(99,102,241,0.35)
+                                        0 8px 24px rgba(99,102,241,0.35)
                                     "
                                     _hover={{
                                         bg: "#5558E3",
                                         transform:
                                             "translateY(-1px)",
                                     }}
+                                    loading={isSubmitting}
+                                    disabled={isSubmitting}
                                 >
                                     Create account
                                 </Button>
@@ -1038,13 +1486,13 @@ Password must contain at least:
                             {/* FOOTER */}
 
                             <VStack
-                                mt={6}
-                                pt={6}
+                                mt={4}
+                                pt={4}
                                 borderTop="1px solid"
                                 borderColor="
                                     rgba(99,102,241,0.08)
                                 "
-                                gap={3}
+                                gap={2}
                             >
 
                                 <Text

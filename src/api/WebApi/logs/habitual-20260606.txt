@@ -1,0 +1,1 @@
+[21:35:06 ERR] An error occurred using the connection to database 'habitual_db' on server 'tcp://localhost:5433'. {"EventId":{"Id":20004,"Name":"Microsoft.EntityFrameworkCore.Database.Connection.ConnectionError"},"SourceContext":"Microsoft.EntityFrameworkCore.Database.Connection"}

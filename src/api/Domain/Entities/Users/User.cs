@@ -55,6 +55,16 @@ namespace Domain.Entities.Users
         public DateTime LastModified { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// Avatar image stored as a binary blob.
+        /// </summary>
+        public byte[] AvatarBlob { get; set; }
+
+        /// <summary>
+        /// MIME content type of the avatar image (e.g., image/png, image/jpeg).
+        /// </summary>
+        public string AvatarContentType { get; set; }
+
+        /// <summary>
         /// Habits associated with the user, which represents the collection of habits that the user is tracking or has created.
         /// </summary>
         public List<Habit> Habits { get; set; } = [];

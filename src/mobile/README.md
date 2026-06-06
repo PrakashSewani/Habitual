@@ -1,5 +1,7 @@
 # Welcome to your Expo app 👋
 
+> **Note:** The mobile app is currently a placeholder. Active development is focused on the backend and web UI. The mobile app will be built in a later phase.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started

@@ -23,6 +23,15 @@ namespace Application.Features.Users.Command.Update
             var userInDb = await _userRepository
                 .GetUserByIdAsync(request.UserId);
 
+            if (userInDb == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            // Preserve avatar fields so they are not overwritten during profile updates
+            var preservedAvatarBlob = userInDb.AvatarBlob;
+            var preservedAvatarContentType = userInDb.AvatarContentType;
+
             if (request.UserRequest.Name is not null)
             {
                 userInDb.Name = request.UserRequest.Name;
@@ -46,6 +55,10 @@ namespace Application.Features.Users.Command.Update
             }
 
             userInDb.LastModified = DateTime.UtcNow;
+
+            // Ensure avatar fields are explicitly preserved
+            userInDb.AvatarBlob = preservedAvatarBlob;
+            userInDb.AvatarContentType = preservedAvatarContentType;
 
             var updatedUser = await _userRepository
                 .UpdateUserAsync(userInDb);

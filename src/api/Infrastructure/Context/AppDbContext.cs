@@ -15,6 +15,7 @@ namespace Infrastructure.Context
         public DbSet<HabitLog> HabitLogs { get; set; }
         public DbSet<HabitLogArchive> HabitLogArchives { get; set; }
         public DbSet<HabitSchedule> HabitSchedules { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -15,5 +15,11 @@ namespace Application.Repositories.Habits
         /// <param name="date">The date for which the habit log should be toggled.</param>
         /// <returns>A boolean indicating whether the habit log was successfully toggled.</returns>
         Task<bool> ToggleHabitLogAsync(Guid habitId, Guid userId, DateOnly date);
+
+        /// <summary>
+        /// Archives habit logs older than 3 months by moving them from the hot table (HabitLogs) to the cold table (HabitLogArchives).
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task ArchiveOldLogsAsync();
     }
 }

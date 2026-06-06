@@ -2,6 +2,7 @@ using Application;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Extensions;
+using WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,14 @@ builder.Services.AddSignalRServices();
 
 builder.Services.AddCorsPolicies();
 
+builder.Services.AddHealthCheckServices(builder.Configuration);
+
+builder.Services.AddApiVersioningServices();
+
+builder.Services.AddSerilogServices();
+
+builder.Services.AddHostedService<ArchivalBackgroundService>();
+
 var app = builder.Build();
 
 app.UseGlobalExceptionHandler();
@@ -34,11 +43,15 @@ app.UseHttpsRedirection();
 
 app.UseCors("Frontend");
 
+app.UseRequestLogging();
+
 app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseHealthCheckServices();
 
 app.UseWebSockets();
 

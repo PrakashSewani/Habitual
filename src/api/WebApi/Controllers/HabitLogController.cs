@@ -9,7 +9,7 @@ namespace WebApi.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("/api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class HabitLogController(IMediator mediator) : Controller
     {
         private readonly IMediator _mediator = mediator;

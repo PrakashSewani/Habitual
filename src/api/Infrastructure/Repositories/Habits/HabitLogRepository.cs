@@ -61,5 +61,28 @@ namespace Infrastructure.Repositories.Habits
 
             return true;
         }
+
+        public async Task ArchiveOldLogsAsync()
+        {
+            var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-3));
+
+            var oldLogs = await _context.HabitLogs
+                .Where(h => h.Date < cutoff)
+                .ToListAsync();
+
+            foreach (var log in oldLogs)
+            {
+                var archive = new HabitLogArchive
+                {
+                    Id = log.Id,
+                    HabitId = log.HabitId,
+                    Date = log.Date
+                };
+                await _context.HabitLogArchives.AddAsync(archive);
+            }
+
+            _context.HabitLogs.RemoveRange(oldLogs);
+            await _context.SaveChangesAsync();
+        }
     }
 }

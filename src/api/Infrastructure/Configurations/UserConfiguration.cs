@@ -19,6 +19,12 @@ namespace Infrastructure.Configurations
             builder.Property(x => x.Name)
                    .IsRequired()
                    .HasMaxLength(100);
+
+            builder.Property(x => x.AvatarBlob)
+                   .HasColumnType("bytea");
+
+            builder.Property(x => x.AvatarContentType)
+                   .HasMaxLength(50);
         }
     }
 }

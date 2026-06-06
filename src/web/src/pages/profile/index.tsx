@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    useEffect,
     useState,
 } from "react";
 
@@ -55,6 +56,51 @@ type ProfileFormProps = {
 const ProfileForm = ({ user, logout }: ProfileFormProps) => {
 
     const axiosRequest = useAxiosRequest();
+
+    // ========================================
+    // AVATAR STATE
+    // ========================================
+
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarLoading, setAvatarLoading] = useState(false);
+    const [avatarSuccess, setAvatarSuccess] = useState(false);
+
+    useEffect(() => {
+        axiosRequest.get("/user/avatar", { responseType: "blob" })
+            .then(resp => {
+                const url = URL.createObjectURL(resp.data);
+                setAvatarUrl(url);
+            })
+            .catch(() => {
+                // No avatar available
+            });
+    }, [axiosRequest]);
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setAvatarFile(file);
+            setAvatarUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const handleAvatarUpload = async () => {
+        if (!avatarFile) return;
+        setAvatarLoading(true);
+        setAvatarSuccess(false);
+        try {
+            const formData = new FormData();
+            formData.append("file", avatarFile);
+            await axiosRequest.post("/user/avatar", formData);
+            setAvatarSuccess(true);
+            setAvatarFile(null);
+        } catch {
+            // Error handled by interceptor
+        } finally {
+            setAvatarLoading(false);
+        }
+    };
 
     // ========================================
     // PROFILE STATE
@@ -251,6 +297,57 @@ const ProfileForm = ({ user, logout }: ProfileFormProps) => {
                         </HStack>
 
                         <VStack align="stretch" gap={5}>
+                            {/* AVATAR */}
+                            <Box display="flex" alignItems="center" gap={4}>
+                                <Box
+                                    w="64px"
+                                    h="64px"
+                                    borderRadius="full"
+                                    bg="rgba(99,102,241,0.10)"
+                                    overflow="hidden"
+                                    border="2px solid"
+                                    borderColor="rgba(99,102,241,0.20)"
+                                    display="flex"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                >
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    ) : (
+                                        <LuUser size={28} color="#6366F1" />
+                                    )}
+                                </Box>
+                                <VStack align="start" gap={2}>
+                                    <Input
+                                        type="file"
+                                        accept="image/png,image/jpeg"
+                                        onChange={handleAvatarChange}
+                                        size="sm"
+                                        borderRadius="xl"
+                                        borderColor="rgba(148,163,184,0.22)"
+                                        _dark={{ borderColor: "rgba(148,163,184,0.22)" }}
+                                        p={1}
+                                    />
+                                    <Button
+                                        size="sm"
+                                        bg="#6366F1"
+                                        color="white"
+                                        borderRadius="xl"
+                                        fontWeight="600"
+                                        onClick={handleAvatarUpload}
+                                        loading={avatarLoading}
+                                        disabled={!avatarFile}
+                                        _hover={{ bg: "#5558E3" }}
+                                    >
+                                        Upload Avatar
+                                    </Button>
+                                    {avatarSuccess && (
+                                        <Text fontSize="xs" color="#10B981" fontWeight="600">
+                                            Avatar updated successfully.
+                                        </Text>
+                                    )}
+                                </VStack>
+                            </Box>
                             {/* NAME */}
                             <Box>
                                 <Text

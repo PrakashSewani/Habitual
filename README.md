@@ -17,7 +17,7 @@ Track daily habits, maintain streaks, and turn small actions into long-term beha
 * Track completion history
 * Streak tracking
 * Clean, minimal UI
-* Cross-platform (mobile + web)
+* Cross-platform (web now, mobile app planned for later phase)
 
 ---
 
@@ -43,7 +43,7 @@ Track daily habits, maintain streaks, and turn small actions into long-term beha
 ```plaintext
 src/
  ├── api/        # .NET backend
- ├── mobile/     # React Native app (Expo)
+ ├── mobile/     # React Native app (Expo) — planned for later phase
  └── web/        # Next.js app
 ```
 

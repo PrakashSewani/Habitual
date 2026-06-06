@@ -568,14 +568,16 @@ Password must contain at least:
                                             Password
                                         </Text>
 
-                                        <Text
-                                            fontSize="sm"
-                                            color="#6366F1"
-                                            cursor="pointer"
-                                            fontWeight="600"
-                                        >
-                                            Forgot password?
-                                        </Text>
+                                        <Link href="/forgot-password">
+                                            <Text
+                                                fontSize="sm"
+                                                color="#6366F1"
+                                                cursor="pointer"
+                                                fontWeight="600"
+                                            >
+                                                Forgot password?
+                                            </Text>
+                                        </Link>
 
                                     </HStack>
 

@@ -107,13 +107,36 @@ namespace Infrastructure.Repositories.Habits
                 .Include(h => h.HabitLogs)
                 .ToListAsync();
 
+            var habitIds = habits.Select(h => h.Id).ToList();
+
+            var archivedLogs = await _context.HabitLogArchives
+                .AsNoTracking()
+                .Where(a => habitIds.Contains(a.HabitId))
+                .ToListAsync();
+
+            var archiveLookup = archivedLogs.ToLookup(a => a.HabitId);
+
             foreach (var habit in habits)
             {
-                habit.HabitLogs = habit.HabitLogs
+                var logs = habit.HabitLogs
                     .Where(log =>
                         (!from.HasValue || log.Date >= from.Value) &&
                         (!to.HasValue || log.Date <= to.Value))
                     .ToList();
+
+                var archived = archiveLookup[habit.Id]
+                    .Select(a => new HabitLog
+                    {
+                        Id = a.Id,
+                        HabitId = a.HabitId,
+                        Date = a.Date
+                    })
+                    .Where(log =>
+                        (!from.HasValue || log.Date >= from.Value) &&
+                        (!to.HasValue || log.Date <= to.Value));
+
+                logs.AddRange(archived);
+                habit.HabitLogs = logs;
             }
 
             return habits;

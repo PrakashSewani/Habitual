@@ -1,4 +1,6 @@
-﻿using Application.Pipeline_Behaviour;
+﻿using Application.Interfaces;
+using Application.Pipeline_Behaviour;
+using Application.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +16,8 @@ namespace Application
                 .AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly())
                 .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()))
                 .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly())
-                .AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidatorPipelineBehaviour<,>));
+                .AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidatorPipelineBehaviour<,>))
+                .AddScoped<IAnalyticsService, AnalyticsService>();
 
             return services;
         }
